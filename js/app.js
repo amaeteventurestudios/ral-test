@@ -262,6 +262,7 @@ function initApp() {
   renderRobotList();
   renderConsoleTargets();
   updateStatusStrip();
+  updateDashboardPulse();
   renderTeleTabs();
   initCharts();
   renderAuditLog();
@@ -468,6 +469,34 @@ function updateStatusStrip() {
   simLabels.forEach(el => {
     if (STATE.simMode) el.classList.remove('hidden'); else el.classList.add('hidden');
   });
+
+  updateDashboardPulse();
+}
+
+function updateDashboardPulse() {
+  const robots = Object.values(STATE.robots);
+  if (!robots.length) return;
+
+  const connected = robots.filter(r => r.connected).length;
+  const avgBattery = Math.round(robots.reduce((sum, r) => sum + (r.battery || 0), 0) / robots.length);
+  const healthScore = Math.max(0, Math.min(100, Math.round((connected / robots.length) * 65 + avgBattery * 0.35)));
+
+  const hourAgo = Date.now() - 60 * 60 * 1000;
+  const blockedRecent = STATE.auditLog.filter(log => {
+    const t = log.timestamp || new Date(log.time || Date.now()).getTime();
+    return t >= hourAgo && (log.validation === 'BLOCKED' || log.validation === 'WOULD_BLOCK');
+  }).length;
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+
+  setText('pulseFleetHealth', `${healthScore}%`);
+  setText('pulseConnected', `${connected} / ${robots.length}`);
+  setText('pulseAvgBattery', `${avgBattery}%`);
+  setText('pulseQueueDepth', `${STATE.commandQueue.length}`);
+  setText('pulseBlockedHour', `${blockedRecent}`);
 }
 
 function bindStatusStrip() {
@@ -490,6 +519,7 @@ function renderRobotList() {
     list.appendChild(card);
   });
   updateConsoleButtonStates();
+  updateDashboardPulse();
 }
 
 function createRobotCard(robot) {
@@ -1168,6 +1198,7 @@ function renderCommandQueue() {
   // ── List (visible on tablet/mobile) ──
   if (recent.length === 0) {
     list.innerHTML = '<div class="queue-empty"><i class="fas fa-inbox"></i><span>No commands queued</span></div>';
+    updateDashboardPulse();
     return;
   }
 
@@ -1196,6 +1227,7 @@ function renderCommandQueue() {
     `;
     list.appendChild(el);
   });
+  updateDashboardPulse();
 }
 
 function updatePipelineState(step) {

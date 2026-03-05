@@ -189,6 +189,30 @@
     <div id="pageDashboard" class="page active">
       <div class="dashboard-grid">
 
+        <!-- ── Dashboard Pulse ── -->
+        <section class="dashboard-pulse" id="dashboardPulse" aria-label="Dashboard pulse metrics">
+          <div class="pulse-item">
+            <span class="pulse-label">Fleet Health</span>
+            <span class="pulse-value" id="pulseFleetHealth">--%</span>
+          </div>
+          <div class="pulse-item">
+            <span class="pulse-label">Connected</span>
+            <span class="pulse-value" id="pulseConnected">0 / 0</span>
+          </div>
+          <div class="pulse-item">
+            <span class="pulse-label">Avg Battery</span>
+            <span class="pulse-value" id="pulseAvgBattery">--%</span>
+          </div>
+          <div class="pulse-item">
+            <span class="pulse-label">Queue Depth</span>
+            <span class="pulse-value" id="pulseQueueDepth">0</span>
+          </div>
+          <div class="pulse-item">
+            <span class="pulse-label">Blocked (1h)</span>
+            <span class="pulse-value" id="pulseBlockedHour">0</span>
+          </div>
+        </section>
+
         <!-- ── Panel A: Robot Fleet ── -->
         <section class="panel panel-fleet" id="panelFleet">
           <div class="panel-header">
