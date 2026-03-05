@@ -1813,6 +1813,19 @@ button:focus-visible, a:focus-visible {
   padding: 0 4px;
 }
 
+.rrr-status-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border-radius: 999px;
+  padding: 1px 6px;
+  border: 1px solid transparent;
+}
+.rrr-status-badge.online { background: rgba(60,203,127,0.12); border-color: rgba(60,203,127,0.35); color: var(--success); }
+.rrr-status-badge.offline { background: rgba(209,75,75,0.12); border-color: rgba(209,75,75,0.35); color: var(--danger); }
+.rrr-status-badge.verified { background: rgba(75,155,209,0.1); border-color: rgba(75,155,209,0.3); color: var(--info); }
+.rrr-status-badge.unverified { background: var(--surface-3); border-color: var(--border); color: var(--muted); }
+
 .rrr-stats {
   display: flex;
   align-items: center;

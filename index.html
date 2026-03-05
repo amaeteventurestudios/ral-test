@@ -607,7 +607,7 @@
           <div class="panel">
             <div class="panel-header">
               <span class="panel-icon"><i class="fas fa-list"></i></span>
-              <h3 class="panel-title">Registered Robots</h3>
+              <h3 class="panel-title">Multi-Robot Manager</h3>
               <span class="muted" style="font-size:11px;margin-left:auto;" id="robotsPageCount">0 / 0 connected</span>
             </div>
             <div class="registered-robots-list" id="registeredRobotsList">
@@ -642,13 +642,17 @@
               </div>
               <div class="form-row">
                 <div class="form-group flex-1">
-                  <label>IP Address</label>
+                  <label>IP Address <span class="muted">(optional)</span></label>
                   <input type="text" id="cfgIp" class="rule-input full-w" placeholder="192.168.1.101" />
                 </div>
                 <div class="form-group" style="width:80px;">
-                  <label>Port</label>
+                  <label>Port <span class="muted">(optional)</span></label>
                   <input type="number" id="cfgPort" class="rule-input full-w" placeholder="80" value="80" />
                 </div>
+              </div>
+              <div class="form-group">
+                <label>Camera URL <span class="muted">(optional)</span></label>
+                <input type="url" id="cfgCameraUrl" class="rule-input full-w" placeholder="http://192.168.1.101:8080/stream" />
               </div>
               <div class="form-group">
                 <label>API Key <span class="muted">(optional)</span></label>
