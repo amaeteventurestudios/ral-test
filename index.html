@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reydious Autonomy Lab</title>
+
+  <!-- ══════════════════════════════════════════════
+       NO-INDEX / NO-CRAWL — Private demo environment
+       Search engines must not index or follow this page.
+  ══════════════════════════════════════════════ -->
+  <meta name="robots"    content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+  <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+  <meta name="bingbot"   content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+
+  <!-- ══════════════════════════════════════════════
+       SOCIAL / OG META — Preview card when shared via link
+       (intentionally limited; not for public indexing)
+  ══════════════════════════════════════════════ -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="Reydious Autonomy Lab" />
+  <meta property="og:description" content="Governed multi-robot control dashboard. Private demo environment." />
+  <meta property="og:image"       content="images/og-preview.jpg" />
+  <meta property="og:image:width"  content="1280" />
+  <meta property="og:image:height" content="640" />
+  <meta property="og:image:alt"   content="Reydious Autonomy Lab — mission control dashboard preview" />
+  <meta property="og:site_name"   content="Reydious Autonomy Lab" />
+
+  <!-- Twitter/X card -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="Reydious Autonomy Lab" />
+  <meta name="twitter:description" content="Governed multi-robot control dashboard. Private demo environment." />
+  <meta name="twitter:image"       content="images/og-preview.jpg" />
+  <meta name="twitter:image:alt"   content="Reydious Autonomy Lab dashboard preview" />
+
+  <!-- Prevent browser from sending referrer to external sites -->
+  <meta name="referrer" content="no-referrer" />
+
+  <!-- Page description (not for indexing — robots tag blocks that) -->
+  <meta name="description" content="Reydious Autonomy Lab — private governed multi-robot control demo. Authenticated access only." />
+  <meta name="author"      content="Reydious Autonomy Lab" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ─── LOGIN SCREEN ─────────────────────────────────────────── -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-bg-glow"></div>
+  <div class="login-grid"></div>
+  <div class="login-container">
+    <div class="login-logo-mark">RAL</div>
+    <h1 class="login-title">Reydious Autonomy Lab</h1>
+    <p class="login-subtitle">Operations Console — Authenticated Access Only</p>
+    <form id="loginForm" class="login-form" autocomplete="off">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter username" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter password" autocomplete="off" />
+      </div>
+      <div id="loginError" class="login-error hidden">Invalid credentials. Try again.</div>
+      <button type="submit" class="btn-primary btn-full">
+        <i class="fas fa-terminal"></i> Sign In
+      </button>
+    </form>
+    <p class="login-hint">Demo: operator / autonomy</p>
+  </div>
+</div>
+
+<!-- ─── APP SHELL ─────────────────────────────────────────────── -->
+<div id="appShell" class="app-shell hidden">
+
+  <!-- Background layers -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow-tr"></div>
+  <div class="bg-glow-bl"></div>
+
+  <!-- ── TOP NAV ── -->
+  <header class="topnav">
+    <div class="topnav-left">
+      <div class="nav-logo-mark">RAL</div>
+      <div class="nav-brand">
+        <span class="nav-title">Reydious Autonomy Lab <span class="nav-env-label">– <strong>Demonstration Environment</strong></span></span>
+        <span class="nav-subtitle">Governed multi-robot control · Private demo</span>
+      </div>
+    </div>
+    <nav class="topnav-links">
+      <a href="#" class="nav-link active" data-page="dashboard">Dashboard</a>
+      <a href="#" class="nav-link" data-page="robots">Robots</a>
+      <a href="#" class="nav-link" data-page="policies">Policies</a>
+      <a href="#" class="nav-link" data-page="logs">Logs</a>
+      <a href="#" class="nav-link" data-page="protocol">Protocol</a>
+      <a href="#" class="nav-link" data-page="about">About</a>
+    </nav>
+    <div class="topnav-right">
+      <button class="btn-primary" id="connectRobotsBtn">
+        <i class="fas fa-satellite-dish"></i> <span class="btn-label">Connect Robots</span>
+      </button>
+      <button class="btn-ghost btn-icon" id="logoutBtn" title="Sign Out">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+      <!-- Hamburger: visible on mobile only -->
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open navigation menu" aria-expanded="false">
+        <i class="fas fa-bars" id="hamburgerIcon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── MOBILE NAV DRAWER ── -->
+  <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+  <nav class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="Mobile navigation">
+    <a href="#" class="mobile-nav-link active" data-page="dashboard">
+      <i class="fas fa-gauge"></i> Dashboard
+    </a>
+    <a href="#" class="mobile-nav-link" data-page="robots">
+      <i class="fas fa-robot"></i> Robots
+    </a>
+    <a href="#" class="mobile-nav-link" data-page="policies">
+      <i class="fas fa-shield-halved"></i> Policies
+    </a>
+    <a href="#" class="mobile-nav-link" data-page="logs">
+      <i class="fas fa-scroll"></i> Logs
+    </a>
+    <a href="#" class="mobile-nav-link" data-page="protocol">
+      <i class="fas fa-file-code"></i> Protocol
+    </a>
+    <a href="#" class="mobile-nav-link" data-page="about">
+      <i class="fas fa-circle-info"></i> About
+    </a>
+    <div class="mobile-nav-actions">
+      <button class="btn-primary btn-sm" id="connectRobotsMobile">
+        <i class="fas fa-satellite-dish"></i> Connect Robots
+      </button>
+      <button class="btn-ghost btn-sm" id="logoutMobile">
+        <i class="fas fa-sign-out-alt"></i> Sign Out
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── STATUS STRIP ── -->
+  <div class="status-strip">
+    <div class="status-item">
+      <span class="status-dot" id="policyEngineDot"></span>
+      <span class="status-label">Policy Engine</span>
+      <span class="status-value" id="policyEngineStatus">Online</span>
+    </div>
+    <div class="status-divider"></div>
+    <div class="status-item">
+      <span class="status-label">Simulation Mode</span>
+      <span class="status-badge badge-sim" id="simModeIndicator">ON</span>
+      <label class="toggle-sm">
+        <input type="checkbox" id="simModeToggle" checked />
+        <span class="toggle-slider-sm"></span>
+      </label>
+    </div>
+    <div class="status-divider"></div>
+    <div class="status-item">
+      <span class="status-label">Connected Robots</span>
+      <span class="status-value" id="connectedRobotsCount">2 / 3</span>
+    </div>
+    <div class="status-divider"></div>
+    <div class="status-item">
+      <span class="status-label">Operator</span>
+      <span class="status-value" id="operatorName">operator</span>
+    </div>
+    <div class="status-divider"></div>
+    <div class="status-item">
+      <span class="status-label">Last Decision</span>
+      <span class="status-value" id="lastDecisionStatus">—</span>
+    </div>
+    <div class="status-strip-right">
+      <button class="btn-ghost btn-xs" id="resetDemoBtn">
+        <i class="fas fa-rotate-left"></i> Reset Demo
+      </button>
+    </div>
+  </div>
+
+  <!-- ── PAGES ── -->
+  <main id="mainContent">
+
+    <!-- ===== DASHBOARD PAGE ===== -->
+    <div id="pageDashboard" class="page active">
+      <div class="dashboard-grid">
+
+        <!-- ── Panel A: Robot Fleet ── -->
+        <section class="panel panel-fleet" id="panelFleet">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-robot"></i></span>
+            <h2 class="panel-title">Robot Fleet</h2>
+            <div class="panel-actions">
+              <button class="icon-btn" title="Refresh"><i class="fas fa-rotate"></i></button>
+              <button class="icon-btn" title="More"><i class="fas fa-ellipsis"></i></button>
+            </div>
+          </div>
+
+          <div class="robot-list" id="robotList">
+            <!-- Robots rendered by JS -->
+          </div>
+
+          <div class="fleet-footer">
+            <button class="btn-secondary btn-sm" id="controlSelectedBtn" disabled>
+              <i class="fas fa-gamepad"></i> Control Selected Robot(s)
+            </button>
+            <button class="btn-ghost btn-sm" id="pairRobotBtn">
+              <i class="fas fa-plus"></i> Pair / Add Robot
+            </button>
+          </div>
+        </section>
+
+        <!-- ── Panel B: Command Console ── -->
+        <section class="panel panel-console" id="panelConsole">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-terminal"></i></span>
+            <h2 class="panel-title">Command Console</h2>
+            <div class="console-target-chips" id="consoleTargetChips">
+              <!-- target robot chips -->
+            </div>
+            <div class="panel-actions">
+              <button class="icon-btn" title="Settings"><i class="fas fa-sliders"></i></button>
+            </div>
+          </div>
+
+          <!-- Command Buttons -->
+          <div class="command-grid">
+            <button class="cmd-btn cmd-move" data-cmd="MOVE_FORWARD" title="Move Forward">
+              <i class="fas fa-arrow-up cmd-icon"></i>
+              <span>Move</span><small>FORWARD</small>
+            </button>
+            <button class="cmd-btn cmd-move" data-cmd="MOVE_BACK" title="Move Back">
+              <i class="fas fa-arrow-down cmd-icon"></i>
+              <span>Move</span><small>BACK</small>
+            </button>
+            <button class="cmd-btn cmd-turn" data-cmd="TURN_LEFT" title="Turn Left">
+              <i class="fas fa-arrow-left cmd-icon"></i>
+              <span>Turn Left</span>
+            </button>
+            <button class="cmd-btn cmd-turn" data-cmd="TURN_RIGHT" title="Turn Right">
+              <i class="fas fa-arrow-right cmd-icon"></i>
+              <span>Turn Right</span>
+            </button>
+            <button class="cmd-btn cmd-stop" data-cmd="STOP" title="Stop">
+              <i class="fas fa-hand cmd-icon" style="color:#E96723"></i>
+              <span>Stop</span>
+            </button>
+            <button class="cmd-btn cmd-estop" data-cmd="ESTOP" id="eStopBtn" title="Emergency Stop">
+              <i class="fas fa-triangle-exclamation cmd-icon"></i>
+              <span>E-Stop</span>
+            </button>
+          </div>
+
+          <!-- Speed Control -->
+          <div class="speed-control">
+            <label class="ctrl-label">Speed</label>
+            <div class="speed-row">
+              <span class="speed-min">5cm/s</span>
+              <input type="range" id="speedSlider" min="5" max="120" value="60" class="slider" />
+              <span class="speed-max">120 cm/s</span>
+              <input type="number" id="speedInput" min="5" max="120" value="60" class="speed-num" />
+            </div>
+          </div>
+
+          <!-- Autonomy Controls -->
+          <div class="autonomy-row">
+            <div class="autonomy-buttons">
+              <button class="cmd-btn cmd-auto" data-cmd="START_AUTONOMY">
+                <i class="fas fa-play"></i> Start Autonomy
+              </button>
+              <button class="cmd-btn cmd-auto" data-cmd="PAUSE_AUTONOMY">
+                <i class="fas fa-pause"></i> Pause Autonomy
+              </button>
+              <button class="cmd-btn cmd-auto-off" data-cmd="DISABLE_AUTONOMY">
+                <i class="fas fa-stop"></i> Disable Autonomy
+              </button>
+            </div>
+            <div class="operator-unlock">
+              <label class="unlock-label">
+                <span id="unlockIcon"><i class="fas fa-lock"></i></span>
+                Operator Unlock
+              </label>
+              <label class="toggle">
+                <input type="checkbox" id="operatorUnlockToggle" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Command Draft -->
+          <div class="cmd-draft" id="cmdDraft">
+            <div class="draft-header">
+              <span class="draft-label"><i class="fas fa-file-code"></i> Draft Command</span>
+              <div class="draft-target-row" id="draftTargets">
+                <!-- dynamic chips -->
+              </div>
+            </div>
+            <div class="draft-body">
+              <div class="draft-row" id="draftCommandDisplay">
+                <span class="draft-robot-tag">R01</span>
+                <span class="draft-cmd-name" id="draftCmdName">—</span>
+                <span class="draft-param" id="draftCmdParam"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Validation Status Banner -->
+          <div class="validation-banner hidden" id="validationBanner">
+            <div class="vb-icon"><i class="fas fa-spinner fa-spin"></i></div>
+            <div class="vb-text">Pending Validation...</div>
+          </div>
+
+          <!-- Send Button -->
+          <button class="btn-primary btn-send" id="sendForValidationBtn" disabled>
+            <i class="fas fa-paper-plane"></i> Send for Validation
+          </button>
+
+          <!-- Manual Command Input (collapsible) -->
+          <div class="manual-cmd-section">
+            <button class="manual-cmd-toggle" id="manualCmdToggle" aria-expanded="false">
+              <i class="fas fa-terminal"></i>
+              <span>Manual Command Input</span>
+              <i class="fas fa-chevron-down manual-toggle-icon" id="manualToggleIcon"></i>
+            </button>
+            <div class="manual-cmd-body hidden" id="manualCmdBody">
+              <div class="form-group">
+                <label class="ctrl-label">Command Name</label>
+                <input type="text" id="manualCmdName" class="rule-input full-w" placeholder="e.g. MOVE_FORWARD, STOP, START_AUTONOMY" autocomplete="off" />
+              </div>
+              <div class="form-group">
+                <label class="ctrl-label">JSON Parameters <span class="muted">(optional)</span></label>
+                <textarea id="manualCmdParams" class="rule-input full-w manual-params-input" placeholder='{"speed": 60}' rows="2"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="ctrl-label">Target Robot(s)</label>
+                <div class="manual-robot-checks" id="manualRobotChecks">
+                  <!-- rendered by JS -->
+                </div>
+              </div>
+              <div class="manual-cmd-footer">
+                <div class="manual-cmd-status hidden" id="manualCmdStatus"></div>
+                <button class="btn-primary btn-sm" id="sendManualCmdBtn">
+                  <i class="fas fa-paper-plane"></i> Send for Validation
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Panel C: Policy Decision ── -->
+        <section class="panel panel-policy" id="panelPolicy">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-shield-halved"></i></span>
+            <h2 class="panel-title">Policy Decision</h2>
+            <div class="panel-actions">
+              <button class="icon-btn" title="More"><i class="fas fa-ellipsis"></i></button>
+            </div>
+          </div>
+          <div id="policyDecisionContent">
+            <div class="policy-status-badge badge-idle" id="policyStatusBadge">
+              <i class="fas fa-clock"></i> AWAITING COMMAND
+            </div>
+            <div class="policy-engine-row">
+              <span class="muted">Policy Engine:</span>
+              <span id="policyEngineLabel">Online</span>
+              <span class="policy-engine-dot dot-green" id="policyEnginePanelDot"></span>
+              <span class="policy-delta muted" id="policyDelta">0% in ↑</span>
+            </div>
+            <div class="policy-rules-section" id="policyRulesSection">
+              <div class="section-label">Rules Applied</div>
+              <div class="rules-list" id="rulesAppliedList">
+                <div class="muted small">No command evaluated yet.</div>
+              </div>
+            </div>
+            <div class="policy-block-reason hidden" id="policyBlockReason">
+              <div class="section-label danger-text">Block Reason</div>
+              <div id="blockReasonText"></div>
+              <div class="suggested-fix" id="suggestedFix"></div>
+            </div>
+            <button class="btn-ghost btn-sm view-decision-btn" id="viewDecisionBtn">
+              <i class="fas fa-code"></i> View Decision Object
+            </button>
+          </div>
+        </section>
+
+        <!-- ── Panel D: Telemetry ── -->
+        <section class="panel panel-telemetry" id="panelTelemetry">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-chart-line"></i></span>
+            <h2 class="panel-title">Telemetry</h2>
+            <div class="tele-robot-tabs" id="teleTabs">
+              <!-- Dynamic tabs -->
+            </div>
+          </div>
+
+          <div id="telemetryContent">
+            <div class="tele-metrics-row">
+              <div class="metric-card" id="teleBattery">
+                <div class="metric-icon"><i class="fas fa-battery-three-quarters"></i></div>
+                <div class="metric-val" id="metricBattery">—%</div>
+                <div class="metric-label">Battery</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-icon"><i class="fas fa-wifi"></i></div>
+                <div class="metric-val" id="metricRSSI">—</div>
+                <div class="metric-label">Signal</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-icon"><i class="fas fa-gauge"></i></div>
+                <div class="metric-val" id="metricSpeed">—</div>
+                <div class="metric-label">Speed</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-icon"><i class="fas fa-location-arrow"></i></div>
+                <div class="metric-val" id="metricState">—</div>
+                <div class="metric-label">State</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-icon"><i class="fas fa-clock"></i></div>
+                <div class="metric-val" id="metricUptime">—</div>
+                <div class="metric-label">Uptime</div>
+              </div>
+            </div>
+
+          <!-- Telemetry Charts with toggle -->
+          <button class="charts-toggle-btn" id="chartsToggleBtn">
+            <span>Charts</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="tele-charts" id="teleCharts">
+            <div class="chart-block">
+              <div class="chart-title" id="batteryChartTitle">Battery <span class="sim-badge hidden" id="batterySim">Simulated</span></div>
+              <div class="chart-wrap"><canvas id="batteryChart"></canvas></div>
+            </div>
+            <div class="chart-block">
+              <div class="chart-title" id="signalChartTitle">Signal <span class="sim-badge hidden" id="signalSim">Simulated</span></div>
+              <div class="chart-wrap"><canvas id="signalChart"></canvas></div>
+            </div>
+          </div>
+
+            <div class="tele-footer">
+              <span class="muted small">Last Update: <span id="lastTeleUpdate">—</span></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Panel E: Command Queue ── -->
+        <section class="panel panel-queue" id="panelQueue">
+          <!-- Queue header: title + pipeline + stats/actions all in one row -->
+          <div class="queue-header">
+            <div class="queue-header-left">
+              <span class="panel-icon"><i class="fas fa-layer-group"></i></span>
+              <h2 class="panel-title">Command Queue</h2>
+              <div class="queue-stats" id="queueStats">
+                <span class="queue-stat"><span id="queuePendingCount">0</span> queued</span>
+                <span class="queue-stat executing"><span id="queueExecCount">0</span> executing</span>
+              </div>
+            </div>
+
+            <!-- Pipeline steps inline in the header -->
+            <div class="queue-pipeline">
+              <div class="pipeline-step" data-step="operator">
+                <i class="fas fa-user"></i>
+                <span>Operator</span>
+              </div>
+              <div class="pipeline-arrow"><i class="fas fa-chevron-right"></i></div>
+              <div class="pipeline-step" data-step="policy">
+                <i class="fas fa-shield-halved"></i>
+                <span>Policy</span>
+              </div>
+              <div class="pipeline-arrow"><i class="fas fa-chevron-right"></i></div>
+              <div class="pipeline-step" data-step="safety">
+                <i class="fas fa-lock"></i>
+                <span>Safety</span>
+              </div>
+              <div class="pipeline-arrow"><i class="fas fa-chevron-right"></i></div>
+              <div class="pipeline-step" data-step="handshake">
+                <i class="fas fa-handshake"></i>
+                <span>Handshake</span>
+              </div>
+              <div class="pipeline-arrow"><i class="fas fa-chevron-right"></i></div>
+              <div class="pipeline-step" data-step="execute">
+                <i class="fas fa-microchip"></i>
+                <span>Execute</span>
+              </div>
+            </div>
+
+            <div class="queue-header-right">
+              <button class="icon-btn" id="clearQueueBtn" title="Clear Queue"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+
+          <!-- Queue items list -->
+          <div class="queue-list" id="queueList">
+            <div class="queue-empty"><i class="fas fa-inbox"></i><br><span>No commands queued</span></div>
+          </div>
+        </section>
+
+        <!-- ── Panel F: Command Audit Log ── -->
+        <section class="panel panel-log" id="panelLog">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-rotate"></i></span>
+            <h2 class="panel-title">Command Audit Log</h2>
+            <div class="log-controls">
+              <div class="search-box">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="text" id="logSearch" placeholder="Search…" />
+              </div>
+              <select id="logFilterRobot" class="filter-select">
+                <option value="">Robot ▾</option>
+                <option value="R-01">R-01</option>
+                <option value="R-02">R-02</option>
+                <option value="R-03">R-03</option>
+              </select>
+              <select id="logFilterStatus" class="filter-select">
+                <option value="">Approval ▾</option>
+                <option value="APPROVED">Approved</option>
+                <option value="BLOCKED">Blocked</option>
+              </select>
+              <select id="logFilterTime" class="filter-select">
+                <option value="">Time ▾</option>
+                <option value="5">Last 5 min</option>
+                <option value="30">Last 30 min</option>
+                <option value="60">Last 1 hr</option>
+              </select>
+              <button class="icon-btn" id="exportLogBtn" title="Export CSV"><i class="fas fa-download"></i></button>
+              <button class="icon-btn" id="clearLogBtn" title="Clear Log"><i class="fas fa-trash"></i></button>
+              <!-- Expand/collapse toggle -->
+              <button class="icon-btn log-expand-btn" id="logExpandBtn" title="Expand / Collapse log">
+                <i class="fas fa-expand-alt" id="logExpandIcon"></i>
+              </button>
+            </div>
+          </div>
+          <!-- Drag resize handle (desktop only) -->
+          <div class="log-resize-handle" id="logResizeHandle" title="Drag to resize"></div>
+          <!-- Mobile: card list -->
+          <div class="log-card-list" id="logCardList"></div>
+          <!-- Tablet+: table -->
+          <div class="log-table-wrap" id="logTableWrap">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Cmd ID</th>
+                  <th>Robot(s)</th>
+                  <th>Command</th>
+                  <th>Validation</th>
+                  <th>Safety</th>
+                  <th>Handshake</th>
+                  <th>Dispatch</th>
+                  <th>Ack</th>
+                  <th>Rule</th>
+                  <th>Operator</th>
+                </tr>
+              </thead>
+              <tbody id="logTableBody">
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div><!-- /dashboard-grid -->
+    </div><!-- /pageDashboard -->
+
+    <!-- ===== ROBOTS PAGE ===== -->
+    <div id="pageRobots" class="page hidden">
+      <div class="page-inner">
+        <div class="page-header-row">
+          <h2 class="page-h2"><i class="fas fa-robot"></i> Robots</h2>
+          <div class="page-header-actions">
+            <button class="btn-primary btn-sm" id="scanRobotsBtn">
+              <i class="fas fa-satellite-dish"></i> Scan Network
+            </button>
+          </div>
+        </div>
+
+        <div class="robots-page-grid">
+          <!-- LEFT: Registered Robots -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-icon"><i class="fas fa-list"></i></span>
+              <h3 class="panel-title">Registered Robots</h3>
+              <span class="muted" style="font-size:11px;margin-left:auto;" id="robotsPageCount">0 / 0 connected</span>
+            </div>
+            <div class="registered-robots-list" id="registeredRobotsList">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+          <!-- RIGHT: Robot Configuration -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-icon"><i class="fas fa-sliders"></i></span>
+              <h3 class="panel-title">Robot Configuration</h3>
+              <span class="muted" style="font-size:11px;margin-left:auto;" id="robotConfigTarget">Select a robot</span>
+            </div>
+            <div class="robot-config-form" id="robotConfigForm">
+              <div class="form-group">
+                <label>Robot Name</label>
+                <input type="text" id="cfgName" class="rule-input full-w" placeholder="e.g. Alpha" />
+              </div>
+              <div class="form-group">
+                <label>Robot ID</label>
+                <input type="text" id="cfgId" class="rule-input full-w" placeholder="e.g. R-01" />
+              </div>
+              <div class="form-group">
+                <label>Connection Type</label>
+                <select id="cfgConnType" class="filter-select full-w">
+                  <option value="wifi">Wi-Fi (HTTP REST)</option>
+                  <option value="serial">Serial / USB</option>
+                  <option value="mqtt">MQTT</option>
+                  <option value="sim">Simulated</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label>IP Address</label>
+                  <input type="text" id="cfgIp" class="rule-input full-w" placeholder="192.168.1.101" />
+                </div>
+                <div class="form-group" style="width:80px;">
+                  <label>Port</label>
+                  <input type="number" id="cfgPort" class="rule-input full-w" placeholder="80" value="80" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>API Key <span class="muted">(optional)</span></label>
+                <input type="text" id="cfgApiKey" class="rule-input full-w" placeholder="Leave blank for open access" />
+              </div>
+
+              <div class="cfg-test-row">
+                <button class="btn-ghost btn-sm" id="testConnectionBtn">
+                  <i class="fas fa-plug"></i> Test Connection
+                </button>
+                <div class="test-result hidden" id="testResult">
+                  <span id="testResultIcon"></span>
+                  <span id="testResultText"></span>
+                </div>
+              </div>
+
+              <!-- Protocol Test Results -->
+              <div class="protocol-test-panel hidden" id="protocolTestPanel">
+                <div class="protocol-test-title"><i class="fas fa-stethoscope"></i> Protocol Test Results</div>
+                <div class="protocol-test-row" id="ptHandshake">
+                  <span class="pt-label"><i class="fas fa-handshake"></i> Handshake</span>
+                  <span class="pt-status pt-pending">—</span>
+                  <span class="pt-detail"></span>
+                </div>
+                <div class="protocol-test-row" id="ptHeartbeat">
+                  <span class="pt-label"><i class="fas fa-heart-pulse"></i> Heartbeat</span>
+                  <span class="pt-status pt-pending">—</span>
+                  <span class="pt-detail"></span>
+                </div>
+                <div class="protocol-test-row" id="ptTelemetry">
+                  <span class="pt-label"><i class="fas fa-chart-line"></i> Telemetry</span>
+                  <span class="pt-status pt-pending">—</span>
+                  <span class="pt-detail"></span>
+                </div>
+                <div class="protocol-test-row" id="ptLatency">
+                  <span class="pt-label"><i class="fas fa-gauge"></i> Latency</span>
+                  <span class="pt-status pt-pending">—</span>
+                  <span class="pt-detail"></span>
+                </div>
+              </div>
+
+              <div class="handshake-result hidden" id="handshakeResult">
+                <div class="hs-row"><span class="hs-label">Handshake</span><span class="hs-val" id="hsStatus">—</span></div>
+                <div class="hs-row"><span class="hs-label">Firmware</span><span class="hs-val" id="hsFirmware">—</span></div>
+                <div class="hs-row"><span class="hs-label">Capabilities</span><span class="hs-val" id="hsCapabilities">—</span></div>
+                <div class="hs-row"><span class="hs-label">Latency</span><span class="hs-val" id="hsLatency">—</span></div>
+              </div>
+
+              <div class="cfg-footer">
+                <button class="btn-ghost btn-sm" id="cancelRobotCfgBtn">Cancel</button>
+                <button class="btn-primary btn-sm" id="saveRobotCfgBtn">
+                  <i class="fas fa-floppy-disk"></i> Save Robot
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== POLICIES PAGE ===== -->
+    <div id="pagePolicies" class="page hidden">
+      <div class="page-inner">
+        <div class="page-header-row">
+          <h2 class="page-h2"><i class="fas fa-shield-halved"></i> Policies</h2>
+          <div class="policy-mode-row">
+            <span class="muted">Policy Mode:</span>
+            <button class="policy-mode-btn active" id="policyModeStrict" data-mode="strict">Strict</button>
+            <button class="policy-mode-btn" id="policyModeTraining" data-mode="training">Training</button>
+          </div>
+        </div>
+        <div class="policy-mode-info" id="policyModeInfo">
+          <i class="fas fa-lock"></i> <strong>Strict Mode:</strong> Commands that violate rules are blocked and do not execute.
+        </div>
+
+        <div class="policies-grid">
+          <!-- Rules Editor -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-icon"><i class="fas fa-list-check"></i></span>
+              <h3 class="panel-title">Governance Rules</h3>
+              <div class="panel-actions">
+                <button class="btn-primary btn-sm" id="addRuleBtn">
+                  <i class="fas fa-plus"></i> Add Rule
+                </button>
+              </div>
+            </div>
+
+            <!-- Add / Edit Rule Form (hidden by default) -->
+            <div class="rule-edit-form hidden" id="ruleEditForm">
+              <div class="ref-header">
+                <span id="ruleEditTitle">New Rule</span>
+                <button class="icon-btn" id="cancelRuleEditBtn"><i class="fas fa-xmark"></i></button>
+              </div>
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label>Rule Name</label>
+                  <input type="text" id="editRuleName" class="rule-input full-w" placeholder="e.g. Max Acceleration" />
+                </div>
+                <div class="form-group" style="width:120px;">
+                  <label>Type</label>
+                  <select id="editRuleType" class="filter-select full-w">
+                    <option value="max_speed">Max Speed</option>
+                    <option value="battery">Battery Level</option>
+                    <option value="unlock">Requires Unlock</option>
+                    <option value="connected">Must Be Connected</option>
+                    <option value="custom">Custom Flag</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label>Description</label>
+                  <input type="text" id="editRuleDesc" class="rule-input full-w" placeholder="Describe what this rule enforces" />
+                </div>
+                <div class="form-group" style="width:100px;">
+                  <label>Threshold</label>
+                  <input type="number" id="editRuleThreshold" class="rule-input full-w" placeholder="80" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group" style="width:80px;">
+                  <label>Priority</label>
+                  <input type="number" id="editRulePriority" class="rule-input full-w" value="5" min="1" max="10" />
+                </div>
+                <div class="form-group flex-1" style="justify-content:flex-end;align-items:flex-end;display:flex;">
+                  <button class="btn-primary btn-sm" id="saveRuleEditBtn">
+                    <i class="fas fa-floppy-disk"></i> Save Rule
+                  </button>
+                </div>
+              </div>
+              <input type="hidden" id="editRuleId" value="" />
+            </div>
+
+            <div class="rules-editor" id="rulesEditorList">
+              <!-- Rendered dynamically by JS -->
+            </div>
+            <div class="rule-footer">
+              <div class="environment-row">
+                <span class="muted">Environment:</span>
+                <button class="env-btn active" id="envIndoor" data-env="indoor">Indoor</button>
+                <button class="env-btn" id="envOutdoor" data-env="outdoor">Outdoor</button>
+              </div>
+              <button class="btn-primary btn-sm" id="savePoliciesBtn">
+                <i class="fas fa-floppy-disk"></i> Save Policies
+              </button>
+            </div>
+          </div>
+
+          <!-- Policy Simulation Widget -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-icon"><i class="fas fa-flask"></i></span>
+              <h3 class="panel-title">Policy Simulation</h3>
+            </div>
+            <div class="policy-sim-widget">
+              <p class="muted small">Test a command to predict approval / block outcome.</p>
+              <div class="sim-form">
+                <div class="form-group">
+                  <label>Command</label>
+                  <select id="simCommand" class="filter-select full-w">
+                    <option value="MOVE_FORWARD">Move Forward</option>
+                    <option value="MOVE_BACK">Move Back</option>
+                    <option value="TURN_LEFT">Turn Left</option>
+                    <option value="TURN_RIGHT">Turn Right</option>
+                    <option value="STOP">Stop</option>
+                    <option value="START_AUTONOMY">Start Autonomy</option>
+                    <option value="PAUSE_AUTONOMY">Pause Autonomy</option>
+                    <option value="DISABLE_AUTONOMY">Disable Autonomy</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Speed (cm/s)</label>
+                  <input type="number" id="simSpeed" value="60" min="5" max="120" class="rule-input full-w" />
+                </div>
+                <div class="form-group">
+                  <label>Target Robot</label>
+                  <select id="simRobot" class="filter-select full-w">
+                    <option value="R-01">R-01</option>
+                    <option value="R-02">R-02</option>
+                    <option value="R-03">R-03</option>
+                  </select>
+                </div>
+                <button class="btn-primary btn-sm" id="runSimBtn">
+                  <i class="fas fa-play"></i> Simulate
+                </button>
+              </div>
+              <div class="sim-result hidden" id="simResult">
+                <div class="sim-verdict" id="simVerdict"></div>
+                <div class="sim-rules-list" id="simRulesList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== LOGS PAGE ===== -->
+    <div id="pageLogs" class="page hidden">
+      <div class="page-inner">
+        <div class="page-header-row">
+          <h2 class="page-h2"><i class="fas fa-scroll"></i> Audit Logs</h2>
+          <div class="log-page-actions">
+            <button class="btn-primary btn-sm" id="exportCsvBtn">
+              <i class="fas fa-file-csv"></i> Export CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="panel" style="padding:.75rem .85rem; margin-bottom:.75rem;">
+          <div class="log-controls" style="flex-wrap:wrap;gap:.5rem;margin-left:0;">
+            <div class="search-box" style="flex:1;min-width:160px;">
+              <i class="fas fa-magnifying-glass"></i>
+              <input type="text" id="logSearchFull" placeholder="Search commands, robots, rules…" />
+            </div>
+            <select id="logFilterRobotFull" class="filter-select">
+              <option value="">All Robots</option>
+              <option value="R-01">R-01</option>
+              <option value="R-02">R-02</option>
+              <option value="R-03">R-03</option>
+            </select>
+            <select id="logFilterStatusFull" class="filter-select">
+              <option value="">All Statuses</option>
+              <option value="APPROVED">Approved</option>
+              <option value="BLOCKED">Blocked</option>
+            </select>
+            <select id="logFilterTimeFull" class="filter-select">
+              <option value="">Any Time</option>
+              <option value="5">Last 5 min</option>
+              <option value="30">Last 30 min</option>
+              <option value="60">Last 1 hr</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel" style="padding:0;">
+          <!-- Mobile: card list -->
+          <div class="log-card-list" id="fullLogCardList" style="max-height: calc(100vh - 320px);"></div>
+          <!-- Tablet+: table -->
+          <div class="log-table-wrap full-log">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Request ID</th>
+                  <th>Robot(s)</th>
+                  <th>Command</th>
+                  <th>Validation</th>
+                  <th>Safety</th>
+                  <th>Handshake</th>
+                  <th>Dispatch</th>
+                  <th>Ack</th>
+                  <th>Endpoint</th>
+                  <th>Rule</th>
+                  <th>Operator</th>
+                </tr>
+              </thead>
+              <tbody id="fullLogTableBody">
+                <!-- Rows rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PROTOCOL PAGE ===== -->
+    <div id="pageProtocol" class="page hidden">
+      <div class="protocol-page-wrap">
+
+        <div class="page-header-row">
+          <h2 class="page-h2"><i class="fas fa-file-code"></i> ESP32 API Protocol</h2>
+          <div class="page-header-actions">
+            <span class="protocol-env-badge"><i class="fas fa-robot"></i> ESP32 HTTP REST</span>
+          </div>
+        </div>
+
+        <div class="protocol-intro panel">
+          <div class="protocol-intro-body">
+            <p>This page documents the HTTP REST API contract implemented on each ESP32 robot. In <strong>Simulation Mode</strong> these endpoints are mocked locally; when Simulation Mode is OFF, the dashboard sends real requests to the configured IP:port.</p>
+            <div class="protocol-legend">
+              <span class="pill-approved">GET</span> read-only
+              <span class="pill-pending" style="background:rgba(100,120,220,0.18);color:#8899ee;border-color:#8899ee;">POST</span> state-changing
+              <span class="pill-blocked">E-STOP</span> safety-critical
+            </div>
+          </div>
+        </div>
+
+        <div class="protocol-grid">
+
+          <!-- Endpoint: POST /handshake -->
+          <div class="panel proto-card">
+            <div class="panel-header">
+              <span class="proto-method proto-post">POST</span>
+              <h3 class="panel-title proto-path">/handshake</h3>
+              <span class="proto-tag">Connection Setup</span>
+            </div>
+            <p class="proto-desc">Verifies firmware compatibility and retrieves robot capabilities. Must complete before any command is accepted.</p>
+            <div class="proto-sections">
+              <div class="proto-section">
+                <div class="proto-section-title">Request Body</div>
+                <pre class="code-block">{
+  "controller": "RAL-v2",
+  "version":    "2.0.0",
+  "timestamp":  1700000000000
+}</pre>
+              </div>
+              <div class="proto-section">
+                <div class="proto-section-title">Response 200</div>
+                <pre class="code-block">{
+  "robotId":         "R-01",
+  "firmwareVersion": "v2.4.1-esp32",
+  "capabilities":    ["move","turn","autonomy","telemetry"],
+  "status":          "ready"
+}</pre>
+              </div>
+              <div class="proto-section">
+                <div class="proto-section-title">Error Codes</div>
+                <table class="proto-table">
+                  <tr><td>400</td><td>Missing or malformed request body</td></tr>
+                  <tr><td>403</td><td>Controller version not supported</td></tr>
+                  <tr><td>503</td><td>Robot not ready (booting)</td></tr>
+                </table>
+              </div>
+            </div>
+            <div class="proto-rules">
+              <div class="proto-rule-item"><i class="fas fa-circle-check success-text"></i> Handshake must succeed before commands are enabled</div>
+              <div class="proto-rule-item"><i class="fas fa-circle-check success-text"></i> Robot marked <strong>Unverified</strong> and commands disabled on failure</div>
+              <div class="proto-rule-item"><i class="fas fa-rotate-right accent-text"></i> Re-run on reconnect</div>
+            </div>
+          </div>
+
+          <!-- Endpoint: POST /command -->
+          <div class="panel proto-card">
+            <div class="panel-header">
+              <span class="proto-method proto-post">POST</span>
+              <h3 class="panel-title proto-path">/command</h3>
+              <span class="proto-tag">Command Dispatch</span>
+            </div>
+            <p class="proto-desc">Sends a validated, policy-approved command to the robot. Only dispatched after Policy Engine → Safety Envelope → Handshake chain passes.</p>
+            <div class="proto-sections">
+              <div class="proto-section">
+                <div class="proto-section-title">Request Body</div>
+                <pre class="code-block">{
+  "commandId": "cmd-abc123",
+  "robotId":   "R-01",
+  "command":   "MOVE_FORWARD",
+  "params":    { "speed": 60 },
+  "issuedAt":  1700000000000
+}</pre>
+              </div>
+              <div class="proto-section">
+                <div class="proto-section-title">Response 200 (accepted)</div>
+                <pre class="code-block">{
+  "commandId":  "cmd-abc123",
+  "accepted":   true,
+  "receivedAt": 1700000000042
+}</pre>
+              </div>
+              <div class="proto-section">
+                <div class="proto-section-title">Response 422 (rejected)</div>
+                <pre class="code-block">{
+  "commandId": "cmd-abc123",
+  "accepted":  false,
+  "error":     "Speed exceeds firmware limit"
+}</pre>
+              </div>
+              <div class="proto-section">
+                <div class="proto-section-title">Error Codes</div>
+                <table class="proto-table">
+                  <tr><td>400</td><td>Malformed command payload</td></tr>
+                  <tr><td>401</td><td>Handshake not verified</td></tr>
+                  <tr><td>422</td><td>Command rejected by firmware</td></tr>
+                  <tr><td>503</td><td>Robot busy / not ready</td></tr>
+                </table>
+              </div>
+            </div>
+            <div class="proto-rules">
+              <div class="proto-rule-item"><i class="fas fa-circle-check success-text"></i> Dashboard polls <code>/command/:id/status</code> every 250–500 ms after acceptance</div>
+              <div class="proto-rule-item"><i class="fas fa-triangle-exclamation" style="color:var(--warning)"></i> Command marked <strong>Timeout</strong> if ack not received in 10 s</div>
+            </div>
+          </div>
+
+          <!-- Endpoint: GET /command/:id/status -->
+          <div class="panel proto-card">
+            <div class="panel-header">
+              <span class="proto-method proto-get">GET</span>
+              <h3 class="panel-title proto-path">/command/:commandId/status</h3>
+              <span class="proto-tag">Ack Polling</span>
+            </div>
+            <p class="proto-desc">Polls acknowledgment state after a command is accepted. Dashboard calls every 250–500 ms until <code>completed</code> or <code>failed</code>.</p>
+            <div class="proto-sections">
+              <div class="proto-section">
+                <div class="proto-section-title">Response 200</div>
+                <pre class="code-block">{
+  "commandId": "cmd-abc123",
+  "state":     "executing",
+  "timestamp": 1700000000120,
+  "error":     null
+}</pre>
+              </div>
+              <div class="proto-section">
+                <div class="proto-section-title">Ack States</div>
+                <table class="proto-table">
+                  <tr><td><span class="pill-pending">received</span></td><td>Robot received the command</td></tr>
+                  <tr><td><span class="pill-pending" style="background:rgba(233,103,35,0.15);color:#E96723;border-color:rgba(233,103,35,0.4);">executing</span></td><td>Robot is actively executing</td></tr>
+                  <tr><td><span class="pill-approved">completed</span></td><td>Execution finished successfully</td></tr>
+                  <tr><td><span class="pill-blocked">failed</span></td><td>Robot-side execution error</td></tr>
+                  <tr><td><span class="pill-blocked" style="background:rgba(150,40,40,0.15);color:#c06050;">timeout</span></td><td>No ack within 10 s window</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Endpoint: GET /telemetry -->
+          <div class="panel proto-card">
+            <div class="panel-header">
+              <span class="proto-method proto-get">GET</span>
+              <h3 class="panel-title proto-path">/telemetry</h3>
+              <span class="proto-tag">Sensor Data</span>
+            </div>
+            <p class="proto-desc">Returns current robot sensor data. Dashboard polls every 1 s. Shows <em>Telemetry Stale</em> warning if 3+ consecutive requests fail.</p>
+            <div class="proto-sections">
+              <div class="proto-section">
+                <div class="proto-section-title">Response 200</div>
+                <pre class="code-block">{
+  "robotId":       "R-01",
+  "battery":       75,
+  "rssi":         -52,
+  "speed":         0,
+  "movementState": "Idle",
+  "uptimeSec":     596
+}</pre>
+              </div>
+              <div class="proto-section">
+                <div class="proto-section-title">Error Codes</div>
+                <table class="proto-table">
+                  <tr><td>503</td><td>Sensor read failed</td></tr>
+                  <tr><td>408</td><td>Request timeout</td></tr>
+                </table>
+              </div>
+            </div>
+            <div class="proto-rules">
+              <div class="proto-rule-item"><i class="fas fa-clock accent-text"></i> Poll interval: <strong>1000 ms</strong></div>
+              <div class="proto-rule-item"><i class="fas fa-triangle-exclamation" style="color:var(--warning)"></i> <em>Telemetry Stale</em> shown after 3 failed polls</div>
+            </div>
+          </div>
+
+          <!-- Endpoint: GET /heartbeat -->
+          <div class="panel proto-card">
+            <div class="panel-header">
+              <span class="proto-method proto-get">GET</span>
+              <h3 class="panel-title proto-path">/heartbeat</h3>
+              <span class="proto-tag">Connectivity Check</span>
+            </div>
+            <p class="proto-desc">Liveness check for the robot. Dashboard calls every 1 s. Robot is marked <strong>Disconnected</strong> if no response for 5 consecutive seconds.</p>
+            <div class="proto-sections">
+              <div class="proto-section">
+                <div class="proto-section-title">Response 200</div>
+                <pre class="code-block">{
+  "alive":     true,
+  "timestamp": 1700000000000
+}</pre>
+              </div>
+            </div>
+            <div class="proto-rules">
+              <div class="proto-rule-item"><i class="fas fa-clock accent-text"></i> Poll interval: <strong>1000 ms</strong></div>
+              <div class="proto-rule-item"><i class="fas fa-circle-xmark danger-text"></i> Mark <strong>Disconnected</strong> after <strong>5 s</strong> no response</div>
+              <div class="proto-rule-item"><i class="fas fa-circle-check success-text"></i> Re-run handshake after reconnect</div>
+            </div>
+          </div>
+
+          <!-- Endpoint: POST /estop -->
+          <div class="panel proto-card proto-card-estop">
+            <div class="panel-header">
+              <span class="proto-method proto-post proto-estop">POST</span>
+              <h3 class="panel-title proto-path">/estop</h3>
+              <span class="proto-tag proto-tag-danger">Safety Critical</span>
+            </div>
+            <p class="proto-desc">Immediately halts all robot motion. Bypasses the normal policy pipeline. Sent directly to robot; no queue delay.</p>
+            <div class="proto-sections">
+              <div class="proto-section">
+                <div class="proto-section-title">Request Body</div>
+                <pre class="code-block">{
+  "commandId": "estop-xyz789",
+  "robotId":   "R-01",
+  "issuedAt":  1700000000000
+}</pre>
+              </div>
+              <div class="proto-section">
+                <div class="proto-section-title">Response 200</div>
+                <pre class="code-block">{
+  "commandId": "estop-xyz789",
+  "accepted":  true,
+  "state":     "stopped"
+}</pre>
+              </div>
+              <div class="proto-section">
+                <div class="proto-section-title">Error Codes</div>
+                <table class="proto-table">
+                  <tr><td>400</td><td>Malformed payload</td></tr>
+                  <tr><td>503</td><td>Robot unreachable — physical stop required</td></tr>
+                </table>
+              </div>
+            </div>
+            <div class="proto-rules">
+              <div class="proto-rule-item"><i class="fas fa-triangle-exclamation danger-text"></i> Bypasses Policy Engine, Safety Envelope, and Queue</div>
+              <div class="proto-rule-item"><i class="fas fa-triangle-exclamation danger-text"></i> All active and queued commands cancelled</div>
+              <div class="proto-rule-item"><i class="fas fa-scroll accent-text"></i> Always logged to Audit Log regardless of mode</div>
+            </div>
+          </div>
+
+        </div><!-- /protocol-grid -->
+
+        <!-- Pipeline Summary -->
+        <div class="panel proto-pipeline-panel">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-diagram-project"></i></span>
+            <h3 class="panel-title">Governed Execution Pipeline</h3>
+          </div>
+          <div class="proto-pipeline-flow">
+            <div class="proto-pipeline-step">
+              <div class="proto-ps-icon"><i class="fas fa-user"></i></div>
+              <div class="proto-ps-label">Operator</div>
+              <div class="proto-ps-desc">Issues command via UI or Manual Input</div>
+            </div>
+            <div class="proto-ps-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="proto-pipeline-step">
+              <div class="proto-ps-icon"><i class="fas fa-shield-halved"></i></div>
+              <div class="proto-ps-label">Policy Engine</div>
+              <div class="proto-ps-desc">Validates rules: speed, unlock, battery, connectivity</div>
+            </div>
+            <div class="proto-ps-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="proto-pipeline-step">
+              <div class="proto-ps-icon"><i class="fas fa-lock"></i></div>
+              <div class="proto-ps-label">Safety Envelope</div>
+              <div class="proto-ps-desc">Checks acceleration, turn rate, battery floor</div>
+            </div>
+            <div class="proto-ps-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="proto-pipeline-step">
+              <div class="proto-ps-icon"><i class="fas fa-handshake"></i></div>
+              <div class="proto-ps-label">Handshake</div>
+              <div class="proto-ps-desc">Verifies robot is connected and firmware compatible</div>
+            </div>
+            <div class="proto-ps-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="proto-pipeline-step">
+              <div class="proto-ps-icon"><i class="fas fa-layer-group"></i></div>
+              <div class="proto-ps-label">Queue</div>
+              <div class="proto-ps-desc">FIFO execution with status tracking</div>
+            </div>
+            <div class="proto-ps-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="proto-pipeline-step">
+              <div class="proto-ps-icon"><i class="fas fa-microchip"></i></div>
+              <div class="proto-ps-label">Dispatch</div>
+              <div class="proto-ps-desc">POST /command → robot</div>
+            </div>
+            <div class="proto-ps-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="proto-pipeline-step">
+              <div class="proto-ps-icon"><i class="fas fa-circle-check"></i></div>
+              <div class="proto-ps-label">Ack Polling</div>
+              <div class="proto-ps-desc">GET /command/:id/status every 250–500 ms</div>
+            </div>
+            <div class="proto-ps-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="proto-pipeline-step">
+              <div class="proto-ps-icon"><i class="fas fa-scroll"></i></div>
+              <div class="proto-ps-label">Audit Log</div>
+              <div class="proto-ps-desc">Records all decisions, ack states, timestamps</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security / Headers -->
+        <div class="panel proto-sec-panel">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-key"></i></span>
+            <h3 class="panel-title">Security &amp; Headers</h3>
+          </div>
+          <div class="proto-sec-body">
+            <div class="proto-sec-row">
+              <span class="proto-sec-label">Optional API Key</span>
+              <span class="proto-sec-desc">Include <code>X-API-Key: &lt;key&gt;</code> header on all requests if configured per-robot. Stored locally only; never transmitted to third-parties.</span>
+            </div>
+            <div class="proto-sec-row">
+              <span class="proto-sec-label">Simulation Mode</span>
+              <span class="proto-sec-desc">When ON, all network calls are mocked. No real requests sent to robots. Latency is simulated (10–120 ms). Toggle in status strip.</span>
+            </div>
+            <div class="proto-sec-row">
+              <span class="proto-sec-label">X-Robots-Tag</span>
+              <span class="proto-sec-desc">All pages served with <code>X-Robots-Tag: noindex, nofollow</code>. Robots.txt disallows all crawlers.</span>
+            </div>
+            <div class="proto-sec-row">
+              <span class="proto-sec-label">No Indexing</span>
+              <span class="proto-sec-desc">Meta robots noindex/nofollow/noarchive/nosnippet on all pages. This is a private demo environment.</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /protocol-page-wrap -->
+    </div><!-- /pageProtocol -->
+
+    <!-- ===== ABOUT PAGE ===== -->
+    <div id="pageAbout" class="page hidden">
+      <div class="about-page-wrap">
+
+        <!-- ── Hero header ── -->
+        <div class="about-hero">
+          <div class="about-hero-logo">RAL</div>
+          <div class="about-hero-text">
+            <h1 class="about-hero-title">Reydious Autonomy Lab</h1>
+            <p class="about-hero-sub">Governed Multi-Robot Control · Private Demo Environment</p>
+          </div>
+        </div>
+
+        <!-- ── Main 2-col grid ── -->
+        <div class="about-main-grid">
+
+          <!-- LEFT — About This System -->
+          <div class="panel about-panel-body">
+            <div class="panel-header">
+              <span class="panel-icon"><i class="fas fa-circle-info"></i></span>
+              <h2 class="panel-title">About This System</h2>
+            </div>
+            <div class="about-body-content">
+              <div class="about-divider"></div>
+
+              <p class="about-para">
+                Reydious Autonomy Lab is a mission-control demonstration environment
+                for governed multi-robot systems.
+              </p>
+
+              <p class="about-para">
+                The platform shows how autonomous machines can operate under enforced
+                operational rules. Every command issued by an operator passes through
+                a <strong>Policy Engine</strong> before a robot executes it.
+              </p>
+
+              <p class="about-para">
+                If a command violates a rule, the system blocks the action and records
+                the decision in the audit log.
+              </p>
+
+              <p class="about-para">
+                This demonstration illustrates <strong>governed execution</strong> — a
+                system architecture where autonomous machines remain transparent,
+                controllable, and auditable during operation.
+              </p>
+            </div>
+          </div>
+
+          <!-- RIGHT — System Version -->
+          <div class="panel about-panel-version">
+            <div class="panel-header">
+              <span class="panel-icon"><i class="fas fa-microchip"></i></span>
+              <h2 class="panel-title">System Version</h2>
+            </div>
+            <div class="about-spec-list">
+
+              <div class="about-spec-item">
+                <span class="about-spec-label">Version</span>
+                <span class="about-spec-value about-spec-mono">1.0.0-demo</span>
+              </div>
+
+              <div class="about-spec-item">
+                <span class="about-spec-label">Policy Engine</span>
+                <span class="about-spec-value">
+                  <span class="about-status-dot dot-green"></span>
+                  <span class="success-text">Online</span>
+                </span>
+              </div>
+
+              <div class="about-spec-item">
+                <span class="about-spec-label">Simulation Mode</span>
+                <span class="about-spec-value" id="aboutSimMode">
+                  <span class="about-status-dot" id="aboutSimDot"></span>
+                  <span id="aboutSimLabel">Active</span>
+                </span>
+              </div>
+
+              <div class="about-spec-item">
+                <span class="about-spec-label">Connected Robots</span>
+                <span class="about-spec-value" id="aboutRobotCount">— / 3</span>
+              </div>
+
+              <div class="about-spec-item">
+                <span class="about-spec-label">Robots Supported</span>
+                <span class="about-spec-value">Up to 3</span>
+              </div>
+
+              <div class="about-spec-item">
+                <span class="about-spec-label">Governance Rules</span>
+                <span class="about-spec-value">
+                  <span class="about-status-dot" style="background:var(--accent);box-shadow:0 0 4px var(--accent)"></span>
+                  6 Active
+                </span>
+              </div>
+
+              <div class="about-spec-item">
+                <span class="about-spec-label">Operator</span>
+                <span class="about-spec-value about-spec-accent" id="aboutOperator">—</span>
+              </div>
+
+              <div class="about-spec-item">
+                <span class="about-spec-label">Policy Mode</span>
+                <span class="about-spec-value" id="aboutPolicyMode">—</span>
+              </div>
+
+              <div class="about-spec-item">
+                <span class="about-spec-label">Environment</span>
+                <span class="about-spec-value" id="aboutEnvironment">—</span>
+              </div>
+
+            </div>
+          </div>
+
+        </div><!-- /about-main-grid -->
+
+        <!-- ── System Purpose banner ── -->
+        <div class="about-purpose-panel">
+          <div class="about-purpose-header">
+            <i class="fas fa-shield-halved"></i>
+            <span>System Purpose</span>
+          </div>
+          <p class="about-purpose-lead">
+            Reydious Autonomy Lab exists to demonstrate how autonomous systems can
+            remain under human governance.
+          </p>
+          <div class="about-purpose-principles">
+            <div class="about-principle">
+              <span class="about-principle-icon"><i class="fas fa-circle-check"></i></span>
+              <div>
+                <div class="about-principle-title">Commands are validated</div>
+                <div class="about-principle-sub">Every command passes the Policy Engine before reaching a robot.</div>
+              </div>
+            </div>
+            <div class="about-principle">
+              <span class="about-principle-icon"><i class="fas fa-shield-halved"></i></span>
+              <div>
+                <div class="about-principle-title">Rules are enforced</div>
+                <div class="about-principle-sub">Speed limits, unlock requirements, and battery checks run automatically.</div>
+              </div>
+            </div>
+            <div class="about-principle">
+              <span class="about-principle-icon"><i class="fas fa-scroll"></i></span>
+              <div>
+                <div class="about-principle-title">Decisions are logged</div>
+                <div class="about-principle-sub">Every approval and block is recorded with timestamps and rule IDs.</div>
+              </div>
+            </div>
+          </div>
+          <p class="about-purpose-footer">
+            <i class="fas fa-robot"></i>
+            The robots execute only what the system allows.
+          </p>
+        </div>
+
+      </div><!-- /about-page-wrap -->
+    </div>
+
+  </main>
+
+  <!-- ── PRIVATE DEMO FOOTER ── -->
+  <footer class="app-footer">
+    <span class="app-footer-dot"></span>
+    Private demo environment. Not indexed.
+    <span class="app-footer-sep">·</span>
+    Authenticated access only.
+    <span class="app-footer-sep">·</span>
+    <span id="footerOperator"></span>
+  </footer>
+
+</div><!-- /appShell -->
+
+<!-- ─── MODALS ─────────────────────────────────────────────────── -->
+
+<!-- Robot Details Drawer -->
+<div id="robotDrawer" class="drawer-overlay hidden">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-header">
+      <h3 id="drawerRobotTitle">Robot Details</h3>
+      <button class="icon-btn" id="closeDrawerBtn"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body" id="drawerBody">
+      <!-- Dynamic content -->
+    </div>
+  </div>
+</div>
+
+<!-- Decision Object Modal -->
+<div id="decisionModal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Policy Decision Object</h3>
+      <button class="icon-btn" id="closeDecisionModal"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <pre id="decisionJson" class="code-block"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Log Row Detail Modal -->
+<div id="logDetailModal" class="modal-overlay hidden">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3>Command Execution Detail</h3>
+      <button class="icon-btn" id="closeLogModal"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="logDetailBody">
+      <!-- Dynamic content -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Run seed + initial renders after app init
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      if (typeof seedDemoLog === 'function') {
+        seedDemoLog();
+        renderAuditLog();
+        renderFullAuditLog();
+      }
+    }, 200);
+  });
+</script>
+</body>
+</html>

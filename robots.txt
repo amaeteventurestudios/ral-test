@@ -1,0 +1,32 @@
+# ──────────────────────────────────────────────
+# Reydious Autonomy Lab — robots.txt
+# Private demo environment. All crawling disallowed.
+# ──────────────────────────────────────────────
+
+# Block all web crawlers from all paths
+User-agent: *
+Disallow: /
+
+# Explicitly block common AI/ML crawlers
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+# No sitemap — private demo
