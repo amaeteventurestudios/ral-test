@@ -63,6 +63,7 @@ const INITIAL_ROBOTS = {
     ipAddress: '192.168.1.101',
     port: 80,
     connectionType: 'wifi',
+    cameraUrl: 'http://192.168.1.101:8080/stream',
     handshakeStatus: 'verified',
     latency: 12,
     capabilities: ['move', 'turn', 'autonomy', 'telemetry'],
@@ -79,6 +80,7 @@ const INITIAL_ROBOTS = {
     ipAddress: '192.168.1.102',
     port: 80,
     connectionType: 'wifi',
+    cameraUrl: '',
     handshakeStatus: 'verified',
     latency: 28,
     capabilities: ['move', 'turn', 'telemetry'],
@@ -95,6 +97,7 @@ const INITIAL_ROBOTS = {
     ipAddress: '192.168.1.103',
     port: 80,
     connectionType: 'sim',
+    cameraUrl: '',
     handshakeStatus: 'unverified',
     latency: null,
     capabilities: ['move', 'turn'],
@@ -1644,7 +1647,7 @@ function renderRobotsPageList() {
   list.innerHTML = '';
   robots.forEach(robot => {
     const battPct = Math.round(robot.battery);
-    const hsColor = robot.handshakeStatus === 'verified' ? 'var(--success)' : 'var(--muted)';
+    const hsVerified = robot.handshakeStatus === 'verified';
     const row = document.createElement('div');
     row.className = `reg-robot-row${!robot.connected ? ' offline' : ''}`;
     row.dataset.robotId = robot.id;
@@ -1654,16 +1657,18 @@ function renderRobotsPageList() {
         <div class="rrr-info">
           <div class="rrr-name">${robot.id} <span class="muted" style="font-size:10px">${robot.name}</span></div>
           <div class="rrr-meta">
-            <span>${robot.ipAddress}:${robot.port || 80}</span>
+            <span>${robot.ipAddress ? `${robot.ipAddress}:${robot.port || 80}` : 'No endpoint configured'}</span>
             <span class="rrr-type">${robot.connectionType || 'wifi'}</span>
+            <span class="rrr-status-badge ${robot.connected ? 'online' : 'offline'}">${robot.connected ? 'ONLINE' : 'OFFLINE'}</span>
+            <span class="rrr-status-badge ${hsVerified ? 'verified' : 'unverified'}">${hsVerified ? 'HS OK' : 'HS WAIT'}</span>
           </div>
         </div>
       </div>
       <div class="rrr-stats">
         <span class="rrr-batt" title="Battery">${battPct}%</span>
         <span class="rrr-latency" title="Latency">${robot.latency ? robot.latency + 'ms' : '—'}</span>
-        <span class="rrr-hs" style="color:${hsColor}" title="Handshake">
-          <i class="fas fa-${robot.handshakeStatus === 'verified' ? 'handshake' : 'handshake-slash'}"></i>
+        <span class="rrr-hs" style="color:${hsVerified ? 'var(--success)' : 'var(--muted)'}" title="Handshake">
+          <i class="fas fa-${hsVerified ? 'handshake' : 'handshake-slash'}"></i>
         </span>
       </div>
       <div class="rrr-actions">
@@ -1757,6 +1762,7 @@ function loadRobotIntoConfigForm(robotId) {
   document.getElementById('cfgIp').value = robot.ipAddress || '';
   document.getElementById('cfgPort').value = robot.port || 80;
   document.getElementById('cfgApiKey').value = robot.apiKey || '';
+  document.getElementById('cfgCameraUrl').value = robot.cameraUrl || '';
   document.getElementById('robotConfigTarget').textContent = `Editing: ${robot.id}`;
   document.getElementById('cfgId').dataset.editingId = robotId;
   // Clear test results
@@ -1765,7 +1771,7 @@ function loadRobotIntoConfigForm(robotId) {
 }
 
 function clearRobotConfigForm() {
-  ['cfgName', 'cfgId', 'cfgIp', 'cfgApiKey'].forEach(id => {
+  ['cfgName', 'cfgId', 'cfgIp', 'cfgApiKey', 'cfgCameraUrl'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.value = ''; delete el.dataset.editingId; }
   });
@@ -1806,6 +1812,18 @@ async function testRobotConnection() {
   const editingId = document.getElementById('cfgId').dataset.editingId;
   const isSimMode = STATE.simMode || connType === 'sim';
   const baseUrl = `http://${ip}:${port}`;
+
+  if (!isSimMode && !ip) {
+    iconEl.innerHTML = '<i class="fas fa-circle-xmark" style="color:var(--danger)"></i>';
+    textEl.textContent = 'IP address is required for non-sim connections';
+    if (protoPanel) {
+      setProtoTestRow('ptHandshake', 'fail', 'Missing IP address');
+      setProtoTestRow('ptHeartbeat', 'fail', 'Not reached');
+      setProtoTestRow('ptTelemetry', 'fail', 'Not reached');
+      setProtoTestRow('ptLatency', 'fail', '—');
+    }
+    return;
+  }
 
   if (isSimMode) {
     iconEl.innerHTML = '<i class="fas fa-circle-check" style="color:var(--success)"></i>';
@@ -1931,6 +1949,7 @@ function saveRobotConfig() {
   const ip = document.getElementById('cfgIp').value.trim();
   const port = parseInt(document.getElementById('cfgPort').value) || 80;
   const apiKey = document.getElementById('cfgApiKey').value.trim();
+  const cameraUrl = document.getElementById('cfgCameraUrl').value.trim();
   const editingId = document.getElementById('cfgId').dataset.editingId;
 
   if (!id || !name) { showToast('Name and ID are required', 'warning'); return; }
@@ -1942,6 +1961,7 @@ function saveRobotConfig() {
     robot.connectionType = connType;
     robot.ipAddress = ip;
     robot.port = port;
+    robot.cameraUrl = cameraUrl;
     if (apiKey) robot.apiKey = apiKey;
     // If ID changed, re-key
     if (editingId !== id) {
@@ -1961,6 +1981,7 @@ function saveRobotConfig() {
       lastHeartbeat: Date.now(),
       firmware: 'unknown',
       ipAddress: ip, port, connectionType: connType,
+      cameraUrl,
       handshakeStatus: 'unverified',
       latency: null, capabilities: [],
       commands: [],
@@ -2280,7 +2301,7 @@ function openRobotDrawer(robotId) {
     </div>
     <div class="drawer-spec-grid">
       <div class="drawer-spec"><div class="ds-label">Firmware</div><div class="ds-val">${robot.firmware}</div></div>
-      <div class="drawer-spec"><div class="ds-label">IP Address</div><div class="ds-val">${robot.ipAddress}:${robot.port || 80}</div></div>
+      <div class="drawer-spec"><div class="ds-label">IP Address</div><div class="ds-val">${robot.ipAddress ? `${robot.ipAddress}:${robot.port || 80}` : 'Not configured'}</div></div>
       <div class="drawer-spec"><div class="ds-label">Connection</div><div class="ds-val">${robot.connectionType || 'wifi'}</div></div>
       <div class="drawer-spec"><div class="ds-label">Handshake</div>
         <div class="ds-val" style="color:${hsColor}"><i class="fas ${hsIcon}"></i> ${robot.handshakeStatus || 'unknown'}</div>
@@ -2293,6 +2314,7 @@ function openRobotDrawer(robotId) {
       <div class="drawer-spec"><div class="ds-label">Speed</div><div class="ds-val">${robot.speed} cm/s</div></div>
       <div class="drawer-spec"><div class="ds-label">Uptime</div><div class="ds-val">${formatUptime(robot.uptime)}</div></div>
       <div class="drawer-spec"><div class="ds-label">Capabilities</div><div class="ds-val" style="font-size:10px">${(robot.capabilities || []).join(', ') || '—'}</div></div>
+      <div class="drawer-spec"><div class="ds-label">Camera URL</div><div class="ds-val" style="font-size:10px;word-break:break-all">${robot.cameraUrl || '—'}</div></div>
     </div>
     <div>
       <div class="drawer-section-title">Last 10 Commands</div>
