@@ -175,11 +175,17 @@
     <div class="status-item">
       <span class="status-dot" id="policyEngineDot"></span>
       <span class="status-label">Policy Engine</span>
+      <button type="button" class="context-help-btn" data-help-title="Policy Engine" data-help-text="Shows whether command-governance rules are active before commands are sent to robots." aria-label="Explain Policy Engine">
+        <i class="fas fa-circle-question"></i>
+      </button>
       <span class="status-value" id="policyEngineStatus">Online</span>
     </div>
     <div class="status-divider"></div>
     <div class="status-item">
       <span class="status-label">Simulation Mode</span>
+      <button type="button" class="context-help-btn" data-help-title="Simulation Mode" data-help-text="Shows whether robots are running in simulation instead of live hardware." aria-label="Explain Simulation Mode">
+        <i class="fas fa-circle-question"></i>
+      </button>
       <span class="status-badge badge-sim" id="simModeIndicator">ON</span>
       <label class="toggle-sm">
         <input type="checkbox" id="simModeToggle" checked />
@@ -189,16 +195,25 @@
     <div class="status-divider"></div>
     <div class="status-item">
       <span class="status-label">Connected Robots</span>
+      <button type="button" class="context-help-btn" data-help-title="Connected Robots" data-help-text="Shows how many registered robots are currently connected and ready to receive commands." aria-label="Explain Connected Robots">
+        <i class="fas fa-circle-question"></i>
+      </button>
       <span class="status-value" id="connectedRobotsCount">2 / 3</span>
     </div>
     <div class="status-divider"></div>
     <div class="status-item">
       <span class="status-label">Operator</span>
+      <button type="button" class="context-help-btn" data-help-title="Operator" data-help-text="Shows the signed-in user currently supervising robot operations in this session." aria-label="Explain Operator">
+        <i class="fas fa-circle-question"></i>
+      </button>
       <span class="status-value" id="operatorName">operator</span>
     </div>
     <div class="status-divider"></div>
     <div class="status-item">
       <span class="status-label">Last Decision</span>
+      <button type="button" class="context-help-btn" data-help-title="Last Decision" data-help-text="Shows the latest policy outcome, such as approved, blocked, or pending review." aria-label="Explain Last Decision">
+        <i class="fas fa-circle-question"></i>
+      </button>
       <span class="status-value" id="lastDecisionStatus">—</span>
     </div>
     <div class="status-strip-right">
@@ -221,8 +236,13 @@
         <!-- ── Dashboard Pulse ── -->
         <section class="dashboard-pulse" id="dashboardPulse" aria-label="Dashboard pulse metrics">
           <div class="pulse-item">
-            <span class="pulse-label">Fleet Health</span>
+            <span class="pulse-label pulse-label-help">Fleet Health
+              <button type="button" class="context-help-btn" data-help-title="Fleet Health" data-help-text="Fleet Health is an overall readiness score based on robot connectivity and battery condition across the fleet." aria-label="Explain Fleet Health">
+                <i class="fas fa-circle-question"></i>
+              </button>
+            </span>
             <span class="pulse-value" id="pulseFleetHealth">--%</span>
+            <span class="pulse-subtext" id="pulseFleetHealthHint">Readiness summary for connected robots.</span>
           </div>
           <div class="pulse-item">
             <span class="pulse-label">Connected</span>

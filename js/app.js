@@ -285,6 +285,7 @@ function initApp() {
   bindNavigation();
   bindHamburgerMenu();
   bindStatusStrip();
+  bindContextHelp();
   bindCommandConsole();
   bindManualCommandInput();
   bindPolicyPanel();
@@ -512,10 +513,105 @@ function updateDashboardPulse() {
   };
 
   setText('pulseFleetHealth', `${healthScore}%`);
+  setText('pulseFleetHealthHint', `${connected}/${robots.length} connected · avg battery ${avgBattery}%`);
   setText('pulseConnected', `${connected} / ${robots.length}`);
   setText('pulseAvgBattery', `${avgBattery}%`);
   setText('pulseQueueDepth', `${STATE.commandQueue.length}`);
   setText('pulseBlockedHour', `${blockedRecent}`);
+}
+
+
+function bindContextHelp() {
+  if (bindContextHelp._bound) return;
+  bindContextHelp._bound = true;
+  const triggers = Array.from(document.querySelectorAll('.context-help-btn[data-help-text]'));
+  if (!triggers.length) return;
+
+  let popover = document.getElementById('contextHelpPopover');
+  if (!popover) {
+    popover = document.createElement('div');
+    popover.id = 'contextHelpPopover';
+    popover.className = 'context-help-popover';
+    popover.innerHTML = '<div class="context-help-title" id="contextHelpTitle"></div><div class="context-help-body" id="contextHelpBody"></div>';
+    document.body.appendChild(popover);
+  }
+
+  let activeTrigger = null;
+  const placePopover = trigger => {
+    const rect = trigger.getBoundingClientRect();
+    const width = Math.min(280, window.innerWidth - 16);
+    const left = Math.max(8, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 8));
+    let top = rect.bottom + 8;
+    const estimatedHeight = 84;
+    if (top + estimatedHeight > window.innerHeight - 8) {
+      top = Math.max(8, rect.top - estimatedHeight - 8);
+    }
+    popover.style.width = `${width}px`;
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+  };
+
+  const closeHelp = () => {
+    popover.classList.remove('open');
+    popover.setAttribute('aria-hidden', 'true');
+    if (activeTrigger) activeTrigger.setAttribute('aria-expanded', 'false');
+    activeTrigger = null;
+  };
+
+  const openHelp = trigger => {
+    if (activeTrigger === trigger && popover.classList.contains('open')) {
+      closeHelp();
+      return;
+    }
+    activeTrigger = trigger;
+    document.getElementById('contextHelpTitle').textContent = trigger.dataset.helpTitle || 'Info';
+    document.getElementById('contextHelpBody').textContent = trigger.dataset.helpText || '';
+    placePopover(trigger);
+    popover.classList.add('open');
+    popover.setAttribute('aria-hidden', 'false');
+    trigger.setAttribute('aria-expanded', 'true');
+  };
+
+  triggers.forEach(trigger => {
+    trigger.setAttribute('aria-haspopup', 'dialog');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    trigger.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      openHelp(trigger);
+    });
+
+    trigger.addEventListener('mouseenter', () => {
+      if (window.matchMedia('(hover: hover)').matches) openHelp(trigger);
+    });
+
+    trigger.addEventListener('mouseleave', () => {
+      if (!window.matchMedia('(hover: hover)').matches) return;
+      setTimeout(() => {
+        if (!trigger.matches(':hover') && !popover.matches(':hover')) closeHelp();
+      }, 110);
+    });
+  });
+
+  popover.addEventListener('mouseleave', () => {
+    if (window.matchMedia('(hover: hover)').matches) closeHelp();
+  });
+
+  document.addEventListener('click', e => {
+    if (!popover.classList.contains('open')) return;
+    if (popover.contains(e.target) || (activeTrigger && activeTrigger.contains(e.target))) return;
+    closeHelp();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeHelp();
+  });
+
+  window.addEventListener('resize', () => {
+    if (activeTrigger && popover.classList.contains('open')) placePopover(activeTrigger);
+  });
+  document.getElementById('mainContent')?.addEventListener('scroll', closeHelp, { passive: true });
 }
 
 function bindStatusStrip() {
