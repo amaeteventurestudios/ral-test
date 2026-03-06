@@ -3009,7 +3009,7 @@ const CONTRAST_SCENARIOS = {
     decision: 'BLOCKED',
     decisionReason: 'Rule R-01 max speed exceeded',
     operatorStatus: 'Alert',
-    authorityLevel: 'L2',
+    authorityLevel: 'Restricted',
     commandRestriction: 'Speed-limited',
     expectedPattern: 'Speed < 60 indoor',
     currentPattern: 'Speed request 90',
@@ -3019,53 +3019,125 @@ const CONTRAST_SCENARIOS = {
     approvalResult: 'Denied',
     faultDetected: 'Overspeed risk',
     correction: 'Throttle to 55',
-    updateStatus: 'Patch not required'
+    updateStatus: 'Patch not required',
+    riskLevel: 'Elevated',
+    policyEngine: 'Online',
+    authorityNote: 'Policy Engine BLOCKS command before Robot Execution.',
+    timeline: [
+      { t: '00:00', label: 'Command Issued' },
+      { t: '00:01', label: 'Planner Request' },
+      { t: '00:01', label: 'Policy Check', intervention: true },
+      { t: '00:02', label: 'Rule Triggered', intervention: true },
+      { t: '00:02', label: 'Command Blocked', badge: '⚠ POLICY BLOCK', intervention: true },
+      { t: '00:02', label: 'Audit Logged' },
+    ],
+    badges: ['⚠ POLICY BLOCK']
   },
   'Operator Fatigue': {
     standard: ['Received', 'Planner active', 'Sent', 'Executed'],
     governed: ['Authority valid', 'Fatigue signal high', 'Restricted', 'Safe stop + logged'],
     decision: 'SAFE STOP',
     decisionReason: 'Operator vigilance threshold failed',
-    operatorStatus: 'Fatigued', authorityLevel: 'L2', commandRestriction: 'Manual-only',
+    operatorStatus: 'Fatigued', authorityLevel: 'Restricted', commandRestriction: 'Manual-only',
     expectedPattern: 'Stable operator biometrics', currentPattern: 'High fatigue score', deviationAlert: 'Elevated',
     configChange: 'N/A', approvalRequirement: 'N/A', approvalResult: 'N/A',
-    faultDetected: 'Human-factor risk', correction: 'Require relief operator', updateStatus: 'Pending reassignment'
+    faultDetected: 'Human-factor risk', correction: 'Require relief operator', updateStatus: 'Pending reassignment',
+    riskLevel: 'Elevated',
+    policyEngine: 'Online',
+    authorityNote: 'Operator state flagged, authority reduced, command restricted to safe stop.',
+    timeline: [
+      { t: '00:00', label: 'Command Issued' },
+      { t: '00:01', label: 'Planner Request' },
+      { t: '00:01', label: 'Operator State Check', intervention: true },
+      { t: '00:02', label: 'Authority Reduced', intervention: true },
+      { t: '00:02', label: 'Safe Stop Triggered', badge: '🛑 SAFE STOP', intervention: true },
+      { t: '00:02', label: 'Audit Logged' },
+    ],
+    badges: ['🛑 SAFE STOP']
   },
   'Sensor Glitch': {
     standard: ['Received', 'Planner active', 'Sent', 'Executed'],
     governed: ['Authority valid', 'Sensor anomaly found', 'Restricted', 'Blocked + logged'],
-    decision: 'RESTRICTED', decisionReason: 'Sensor confidence dropped below baseline',
-    operatorStatus: 'Normal', authorityLevel: 'L3', commandRestriction: 'No autonomy',
-    expectedPattern: 'Consistent IMU + lidar', currentPattern: 'Intermittent sensor spikes', deviationAlert: 'Medium',
+    decision: 'BLOCKED', decisionReason: 'Sensor confidence dropped below baseline',
+    operatorStatus: 'Normal', authorityLevel: 'Operator', commandRestriction: 'No autonomy',
+    expectedPattern: 'Consistent IMU + lidar', currentPattern: 'Intermittent sensor spikes', deviationAlert: 'Elevated',
     configChange: 'Sensor recalibration', approvalRequirement: 'Policy check', approvalResult: 'Approved',
-    faultDetected: 'IMU jitter', correction: 'Switch to fallback sensor fusion', updateStatus: 'Applied'
+    faultDetected: 'IMU jitter', correction: 'Switch to fallback sensor fusion', updateStatus: 'Applied',
+    riskLevel: 'Critical',
+    policyEngine: 'Online',
+    authorityNote: 'Anomaly monitor intervenes; unsafe execution path is blocked.',
+    timeline: [
+      { t: '00:00', label: 'Command Issued' },
+      { t: '00:01', label: 'Planner Request' },
+      { t: '00:01', label: 'Anomaly Monitor', intervention: true },
+      { t: '00:02', label: 'Anomaly Detected', badge: '🔍 ANOMALY DETECTED', intervention: true },
+      { t: '00:02', label: 'Command Blocked', badge: '⚠ POLICY BLOCK', intervention: true },
+      { t: '00:02', label: 'Audit Logged' },
+    ],
+    badges: ['🔍 ANOMALY DETECTED', '⚠ POLICY BLOCK']
   },
   'Fragile Object': {
     standard: ['Received', 'Planner active', 'Sent', 'Executed'],
     governed: ['Authority valid', 'Policy context fragile load', 'Restricted', 'Approved + logged'],
     decision: 'APPROVED', decisionReason: 'Precision mode constraints satisfied',
-    operatorStatus: 'Normal', authorityLevel: 'L2', commandRestriction: 'Low-force only',
-    expectedPattern: 'Soft trajectory profile', currentPattern: 'Within tolerance', deviationAlert: 'None',
+    operatorStatus: 'Normal', authorityLevel: 'Operator', commandRestriction: 'Low-force only',
+    expectedPattern: 'Soft trajectory profile', currentPattern: 'Within tolerance', deviationAlert: 'Nominal',
     configChange: 'Grip-force profile', approvalRequirement: 'Dual approval', approvalResult: 'Approved',
-    faultDetected: 'No fault', correction: 'Maintain precision profile', updateStatus: 'Stable'
+    faultDetected: 'No fault', correction: 'Maintain precision profile', updateStatus: 'Stable',
+    riskLevel: 'Nominal',
+    policyEngine: 'Online',
+    authorityNote: 'Mission policy constrains motion profile and allows safe execution.',
+    timeline: [
+      { t: '00:00', label: 'Command Issued' },
+      { t: '00:01', label: 'Planner Request' },
+      { t: '00:01', label: 'Policy Validation', intervention: true },
+      { t: '00:02', label: 'Constraint Applied', intervention: true },
+      { t: '00:02', label: 'Command Approved' },
+      { t: '00:02', label: 'Audit Logged' },
+    ],
+    badges: []
   },
   'Config Change': {
     standard: ['Received', 'Planner active', 'Sent', 'Executed'],
     governed: ['Authority valid', 'Config governance invoked', 'Pending approval', 'Logged'],
     decision: 'BLOCKED', decisionReason: 'Unapproved configuration mutation',
-    operatorStatus: 'Normal', authorityLevel: 'L1', commandRestriction: 'No config writes',
-    expectedPattern: 'Read-only operation', currentPattern: 'Config write request', deviationAlert: 'High',
-    configChange: 'Navigation stack edit', approvalRequirement: 'Admin sign-off', approvalResult: 'Rejected',
-    faultDetected: 'Config drift attempt', correction: 'Rollback + lock config', updateStatus: 'Locked'
+    operatorStatus: 'Normal', authorityLevel: 'Supervisor', commandRestriction: 'No config writes',
+    expectedPattern: 'Read-only operation', currentPattern: 'Config write request', deviationAlert: 'Elevated',
+    configChange: 'Navigation stack edit', approvalRequirement: 'Supervisor sign-off', approvalResult: 'Rejected',
+    faultDetected: 'Config drift attempt', correction: 'Rollback + lock config', updateStatus: 'Locked',
+    riskLevel: 'Elevated',
+    policyEngine: 'Online',
+    authorityNote: 'Policy requires supervisor authority; change denied at policy checkpoint.',
+    timeline: [
+      { t: '00:00', label: 'Command Issued' },
+      { t: '00:01', label: 'Planner Request' },
+      { t: '00:01', label: 'Authority Check', intervention: true },
+      { t: '00:02', label: 'Supervisor Required', intervention: true },
+      { t: '00:02', label: 'Change Denied', badge: '⚠ POLICY BLOCK', intervention: true },
+      { t: '00:02', label: 'Audit Logged' },
+    ],
+    badges: ['⚠ POLICY BLOCK']
   },
   'Diagnostic Fault': {
     standard: ['Received', 'Planner active', 'Sent', 'Executed with fault'],
     governed: ['Authority valid', 'Fault monitor triggered', 'Safe stop', 'Logged + repair suggested'],
     decision: 'SAFE STOP', decisionReason: 'Actuator fault confidence high',
-    operatorStatus: 'Normal', authorityLevel: 'L3', commandRestriction: 'Diagnostics only',
+    operatorStatus: 'Normal', authorityLevel: 'Restricted', commandRestriction: 'Diagnostics only',
     expectedPattern: 'Nominal motor current', currentPattern: 'Current spike burst', deviationAlert: 'Critical',
     configChange: 'Firmware patch', approvalRequirement: 'Maintenance approval', approvalResult: 'Approved',
-    faultDetected: 'Motor controller fault', correction: 'Load fallback profile + reboot', updateStatus: 'In progress'
+    faultDetected: 'Motor controller fault', correction: 'Load fallback profile + reboot', updateStatus: 'In progress',
+    riskLevel: 'Critical',
+    policyEngine: 'Degraded',
+    authorityNote: 'Safety envelope overrides command and moves system to safe stop path.',
+    timeline: [
+      { t: '00:00', label: 'Command Issued' },
+      { t: '00:01', label: 'Planner Request' },
+      { t: '00:01', label: 'Anomaly Monitor', intervention: true },
+      { t: '00:02', label: 'Fault Confidence High', badge: '🔍 ANOMALY DETECTED', intervention: true },
+      { t: '00:02', label: 'Safe Stop Triggered', badge: '🛑 SAFE STOP', intervention: true },
+      { t: '00:02', label: 'Audit Logged' },
+    ],
+    badges: ['🔍 ANOMALY DETECTED', '🛑 SAFE STOP']
   },
 };
 
@@ -3095,8 +3167,8 @@ function bindContrastPage() {
 
 function renderContrastPage() {
   const scenario = CONTRAST_SCENARIOS[STATE.contrastScenario] || CONTRAST_SCENARIOS['Unsafe Speed'];
-  const effectiveDecision = STATE.contrastGovernance ? scenario.decision : 'EXECUTED';
-  const effectiveReason = STATE.contrastGovernance ? scenario.decisionReason : 'No governance checks applied';
+  const effectiveDecision = STATE.contrastGovernance ? scenario.decision : 'APPROVED';
+  const effectiveReason = STATE.contrastGovernance ? scenario.decisionReason : 'Direct execution path active';
 
   document.querySelectorAll('.contrast-segment-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.scenario === STATE.contrastScenario);
@@ -3127,24 +3199,29 @@ function renderContrastPage() {
   ]);
   renderInfoRows('operatorStateCard', [
     ['operator status', scenario.operatorStatus],
-    ['authority level', scenario.authorityLevel],
-    ['command restriction', scenario.commandRestriction],
+    ['authority level', STATE.contrastGovernance ? scenario.authorityLevel : 'Operator'],
+    ['command restriction', STATE.contrastGovernance ? scenario.commandRestriction : 'None'],
   ]);
   renderInfoRows('anomalyDetectionCard', [
     ['expected pattern', scenario.expectedPattern],
     ['current pattern', scenario.currentPattern],
-    ['deviation alert', scenario.deviationAlert],
+    ['deviation alert', STATE.contrastGovernance ? scenario.deviationAlert : 'Bypassed'],
   ]);
   renderInfoRows('configurationGovernanceCard', [
     ['attempted config change', scenario.configChange],
-    ['approval requirement', scenario.approvalRequirement],
-    ['approval result', STATE.contrastGovernance ? scenario.approvalResult : 'Not required'],
+    ['approval requirement', STATE.contrastGovernance ? scenario.approvalRequirement : 'Not required'],
+    ['approval result', STATE.contrastGovernance ? scenario.approvalResult : 'Auto-applied'],
   ]);
   renderInfoRows('diagnosticRepairCard', [
     ['fault detected', scenario.faultDetected],
     ['suggested correction', scenario.correction],
     ['system update status', scenario.updateStatus],
   ]);
+
+  renderInterventionBadges(scenario);
+  renderDecisionTimeline(scenario, null);
+  renderSystemBanner(scenario);
+  renderAuthorityChain(scenario, null);
 }
 
 function renderStatusRows(containerId, rows) {
@@ -3159,43 +3236,121 @@ function renderInfoRows(containerId, rows) {
   el.innerHTML = rows.map(([k, v]) => `<div class="contrast-info-row"><span>${k}</span><span>${v}</span></div>`).join('');
 }
 
+function renderInterventionBadges(scenario) {
+  const el = document.getElementById('contrastInterventionBadges');
+  if (!el) return;
+  const badges = STATE.contrastGovernance ? scenario.badges : [];
+  if (!badges.length) {
+    el.innerHTML = '<span class="policy-status-badge badge-approved">NO INTERVENTION</span>';
+    return;
+  }
+  el.innerHTML = badges.map(b => `<span class="contrast-intervention-badge">${b}</span>`).join('');
+}
+
+function renderDecisionTimeline(scenario, progress) {
+  const el = document.getElementById('contrastTimeline');
+  if (!el) return;
+  const max = progress === null ? scenario.timeline.length - 1 : progress;
+  el.innerHTML = scenario.timeline.map((item, idx) => {
+    const active = idx <= max ? ' active' : '';
+    const intervention = item.intervention ? ' intervention' : '';
+    const badge = item.badge ? `<span class="contrast-timeline-badge">${item.badge}</span>` : '';
+    return `<div class="contrast-timeline-event${active}${intervention}"><div class="contrast-timeline-time">${item.t}</div><div class="contrast-timeline-label">${item.label}</div>${badge}</div>`;
+  }).join('');
+}
+
+function renderSystemBanner(scenario) {
+  const mode = STATE.contrastGovernance ? 'Governed' : 'Direct';
+  const authority = STATE.contrastGovernance ? scenario.authorityLevel : 'Operator';
+  const risk = STATE.contrastGovernance ? scenario.riskLevel : 'Nominal';
+  const policyEngine = STATE.contrastGovernance ? scenario.policyEngine : 'Bypassed';
+
+  const modeEl = document.getElementById('contrastExecMode');
+  const authEl = document.getElementById('contrastAuthority');
+  const riskEl = document.getElementById('contrastRiskLevel');
+  const policyEl = document.getElementById('contrastPolicyEngine');
+  if (!modeEl || !authEl || !riskEl || !policyEl) return;
+
+  modeEl.textContent = mode;
+  authEl.textContent = authority;
+  riskEl.textContent = risk;
+  policyEl.textContent = policyEngine;
+
+  riskEl.classList.remove('is-nominal', 'is-elevated', 'is-critical');
+  riskEl.classList.add(risk === 'Critical' ? 'is-critical' : risk === 'Elevated' ? 'is-elevated' : 'is-nominal');
+}
+
+function renderAuthorityChain(scenario, highlightIndex) {
+  const steps = [...document.querySelectorAll('.contrast-authority-step')];
+  if (!steps.length) return;
+  steps.forEach((step, i) => {
+    step.classList.toggle('active', highlightIndex === i);
+    step.classList.toggle('done', highlightIndex !== null && i < highlightIndex);
+  });
+  const note = document.getElementById('contrastAuthorityNote');
+  if (note) note.textContent = STATE.contrastGovernance ? scenario.authorityNote : 'Direct path: operator command passes straight to robot execution.';
+}
+
 function replayContrastScenario() {
   if (STATE.contrastReplayTimer) {
     clearTimeout(STATE.contrastReplayTimer);
     STATE.contrastReplayTimer = null;
   }
+
+  const scenario = CONTRAST_SCENARIOS[STATE.contrastScenario] || CONTRAST_SCENARIOS['Unsafe Speed'];
   const standardSteps = [...document.querySelectorAll('#standardPipeline .contrast-step')];
   const governedSteps = [...document.querySelectorAll('#governedPipeline .contrast-step')];
   [...standardSteps, ...governedSteps].forEach(step => step.classList.remove('active', 'done'));
 
-  const highlight = (steps, index, doneBefore = true) => {
-    steps.forEach((s, i) => {
-      s.classList.toggle('done', doneBefore && i < index);
-      s.classList.toggle('active', i === index);
+  const setStepState = (steps, activeIndex) => {
+    steps.forEach((step, i) => {
+      step.classList.toggle('active', i === activeIndex);
+      step.classList.toggle('done', i < activeIndex);
     });
   };
 
-  showToast('Command issued', 'info');
-  STATE.contrastReplayTimer = setTimeout(() => {
-    showToast('Standard autonomy executes immediately', 'approved');
-    highlight(standardSteps, Math.max(0, standardSteps.length - 1));
-  }, 400);
+  renderDecisionTimeline(scenario, -1);
+  renderAuthorityChain(scenario, 0);
+  showToast('Step 1: Operator Command received', 'info');
+
+  // ~2s total timeline
+  setTimeout(() => {
+    let i = 0;
+    const intv = setInterval(() => {
+      setStepState(standardSteps, i);
+      renderDecisionTimeline(scenario, Math.min(i + 1, scenario.timeline.length - 1));
+      i += 1;
+      if (i >= standardSteps.length) clearInterval(intv);
+    }, 140);
+  }, 120);
+
+  setTimeout(() => {
+    showToast('Step 3: Governance checks activating', 'info');
+    renderAuthorityChain(scenario, 1);
+    if (STATE.contrastGovernance) {
+      let g = 1;
+      const intv = setInterval(() => {
+        setStepState(governedSteps, g);
+        renderDecisionTimeline(scenario, Math.min(g + 2, scenario.timeline.length - 1));
+        if (g === 2) renderAuthorityChain(scenario, 1);
+        if (g === 3) renderAuthorityChain(scenario, 2);
+        if (g === 4) renderAuthorityChain(scenario, 2);
+        g += 1;
+        if (g >= governedSteps.length) clearInterval(intv);
+      }, 120);
+    } else {
+      setStepState(governedSteps, governedSteps.length - 1);
+    }
+  }, 850);
 
   STATE.contrastReplayTimer = setTimeout(() => {
-    showToast('Governance pipeline evaluating command', 'info');
-    let idx = 0;
-    const interval = setInterval(() => {
-      highlight(governedSteps, idx);
-      idx += 1;
-      if (idx >= governedSteps.length) clearInterval(interval);
-    }, 220);
-  }, 950);
-
-  STATE.contrastReplayTimer = setTimeout(() => {
-    const scenario = CONTRAST_SCENARIOS[STATE.contrastScenario] || CONTRAST_SCENARIOS['Unsafe Speed'];
-    const decision = STATE.contrastGovernance ? scenario.decision : 'EXECUTED';
-    const toastType = decision === 'APPROVED' || decision === 'EXECUTED' ? 'approved' : decision === 'SAFE STOP' ? 'warning' : 'blocked';
-    showToast(`Decision: ${decision} · Log entry recorded`, toastType);
-    renderContrastPage();
-  }, 3200);
+    const decision = STATE.contrastGovernance ? scenario.decision : 'APPROVED';
+    const toastType = decision === 'APPROVED' ? 'approved' : decision === 'SAFE STOP' ? 'warning' : 'blocked';
+    showToast(`Step 4: ${decision} · Audit logged`, toastType);
+    renderDecisionTimeline(scenario, scenario.timeline.length - 1);
+    renderAuthorityChain(scenario, decision === 'APPROVED' ? 3 : 1);
+    renderSystemBanner(scenario);
+    renderInterventionBadges(scenario);
+  }, 2100);
 }
+

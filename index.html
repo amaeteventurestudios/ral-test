@@ -1268,19 +1268,32 @@
       <div class="page-inner contrast-page-wrap">
         <div class="page-header-row contrast-header-row">
           <div>
-            <h2 class="page-h2"><i class="fas fa-code-branch"></i> Governance Contrast</h2>
-            <p class="contrast-subtitle">Compare standard autonomy with governed execution</p>
+            <h2 class="page-h2"><i class="fas fa-code-branch"></i> Autonomy vs Governance</h2>
+            <p class="contrast-subtitle">Compare standard autonomous execution with the Reydious execution governance layer.</p>
+            <p class="contrast-subline">Robots already know how to move. <strong>Reydious governs how they execute.</strong></p>
           </div>
           <div class="contrast-header-actions">
-            <div class="contrast-toggle" role="group" aria-label="Governance mode">
-              <button class="contrast-toggle-btn" id="governanceOffBtn" type="button">Governance OFF</button>
-              <button class="contrast-toggle-btn active" id="governanceOnBtn" type="button">Governance ON</button>
+            <div class="contrast-mode-block">
+              <div class="contrast-mode-label">Execution Mode</div>
+              <div class="contrast-mode-desc">Governance OFF: Operator command → robot executes</div>
+              <div class="contrast-mode-desc">Governance ON: Operator command → policy validation → allowed / blocked → execution</div>
+              <div class="contrast-toggle" role="group" aria-label="Governance mode">
+                <button class="contrast-toggle-btn" id="governanceOffBtn" type="button">Governance OFF</button>
+                <button class="contrast-toggle-btn active" id="governanceOnBtn" type="button">Governance ON</button>
+              </div>
             </div>
             <button class="btn-primary btn-sm" id="replayScenarioBtn">
               <i class="fas fa-play"></i> Replay Scenario
             </button>
           </div>
         </div>
+
+        <section class="panel contrast-system-banner" id="contrastSystemBanner">
+          <div class="contrast-banner-item"><span class="contrast-banner-label">Execution Mode</span><span class="contrast-banner-value" id="contrastExecMode">Governed</span></div>
+          <div class="contrast-banner-item"><span class="contrast-banner-label">System Authority</span><span class="contrast-banner-value" id="contrastAuthority">Operator</span></div>
+          <div class="contrast-banner-item"><span class="contrast-banner-label">Risk Level</span><span class="contrast-banner-value is-nominal" id="contrastRiskLevel">Nominal</span></div>
+          <div class="contrast-banner-item"><span class="contrast-banner-label">Policy Engine</span><span class="contrast-banner-value" id="contrastPolicyEngine">Online</span></div>
+        </section>
 
         <div class="panel contrast-scenario-panel">
           <div class="contrast-segmented" id="contrastScenarioSwitcher" role="group" aria-label="Scenario selector">
@@ -1297,9 +1310,15 @@
           <section class="panel contrast-panel" id="standardPanel">
             <div class="panel-header">
               <span class="panel-icon"><i class="fas fa-microchip"></i></span>
-              <h3 class="panel-title">Standard Autonomy</h3>
+              <h3 class="panel-title">Autonomous System (Baseline)</h3>
             </div>
             <div class="contrast-body">
+              <div class="contrast-flow-caption">
+                <div class="contrast-flow-line">Operator Command</div>
+                <div class="contrast-flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                <div class="contrast-flow-line">Robot Executes</div>
+                <div class="contrast-flow-note">Most autonomy platforms stop here.</div>
+              </div>
               <div class="contrast-pipeline" id="standardPipeline">
                 <div class="contrast-step" data-step="Sensors">Sensors</div>
                 <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
@@ -1318,9 +1337,10 @@
           <section class="panel contrast-panel" id="governedPanel">
             <div class="panel-header">
               <span class="panel-icon"><i class="fas fa-shield-halved"></i></span>
-              <h3 class="panel-title">Reydious Governance</h3>
+              <h3 class="panel-title">Reydious Execution Governance Layer</h3>
             </div>
             <div class="contrast-body">
+              <p class="contrast-panel-desc">Operator commands are validated, constrained, and monitored before execution.</p>
               <div class="contrast-pipeline" id="governedPipeline">
                 <div class="contrast-step" data-step="Operator Command">Operator Command</div>
                 <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
@@ -1338,19 +1358,38 @@
                 <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
                 <div class="contrast-step" data-step="Audit Log">Audit Log</div>
               </div>
-              <div class="contrast-badges">
-                <span class="policy-status-badge badge-approved">APPROVED</span>
-                <span class="policy-status-badge badge-blocked">BLOCKED</span>
-                <span class="policy-status-badge badge-pending">SAFE STOP</span>
-                <span class="policy-status-badge badge-idle">RESTRICTED</span>
-                <span class="policy-status-badge badge-blocked">ANOMALY DETECTED</span>
-                <span class="policy-status-badge badge-approved">LOGGED</span>
-              </div>
+              <div class="contrast-badges" id="contrastInterventionBadges"></div>
               <div class="contrast-status-list" id="governedStatusList"></div>
             </div>
           </section>
         </div>
 
+        <section class="panel contrast-timeline-panel">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-wave-square"></i></span>
+            <h3 class="panel-title">Mission-Control Decision Timeline</h3>
+          </div>
+          <div class="contrast-timeline" id="contrastTimeline"></div>
+        </section>
+
+        <section class="panel contrast-authority-panel">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-sitemap"></i></span>
+            <h3 class="panel-title">Command Authority Chain</h3>
+          </div>
+          <div class="contrast-authority-chain" id="contrastAuthorityChain">
+            <div class="contrast-authority-step" data-authority="Operator">Operator</div>
+            <div class="contrast-authority-arrow"><i class="fas fa-arrow-down"></i></div>
+            <div class="contrast-authority-step" data-authority="Mission Policy">Mission Policy</div>
+            <div class="contrast-authority-arrow"><i class="fas fa-arrow-down"></i></div>
+            <div class="contrast-authority-step" data-authority="System Safety Envelope">System Safety Envelope</div>
+            <div class="contrast-authority-arrow"><i class="fas fa-arrow-down"></i></div>
+            <div class="contrast-authority-step" data-authority="Robot Execution">Robot Execution</div>
+          </div>
+          <div class="contrast-authority-note" id="contrastAuthorityNote"></div>
+        </section>
+
+        <div class="contrast-capability-heading">Capabilities Added by Reydious</div>
         <div class="contrast-lower-grid" id="contrastLowerGrid">
           <section class="panel contrast-info-card">
             <div class="panel-header"><h3 class="panel-title">Decision Traceability</h3></div>
