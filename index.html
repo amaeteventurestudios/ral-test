@@ -63,7 +63,12 @@
       </div>
       <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Enter password" autocomplete="off" />
+        <div class="password-input-wrap">
+          <input type="password" id="password" placeholder="Enter password" autocomplete="off" />
+          <button type="button" class="password-toggle" id="passwordToggleBtn" aria-label="Show password" aria-pressed="false">
+            <i class="fas fa-eye" id="passwordToggleIcon"></i>
+          </button>
+        </div>
       </div>
       <div id="loginError" class="login-error hidden">Invalid credentials. Try again.</div>
       <button type="submit" class="btn-primary btn-full">
@@ -97,6 +102,7 @@
       <a href="#" class="nav-link" data-page="policies">Policies</a>
       <a href="#" class="nav-link" data-page="logs">Logs</a>
       <a href="#" class="nav-link" data-page="protocol">Protocol</a>
+      <a href="#" class="nav-link" data-page="contrast">Contrast</a>
       <a href="#" class="nav-link" data-page="about">About</a>
     </nav>
     <div class="topnav-right">
@@ -131,6 +137,9 @@
     <a href="#" class="mobile-nav-link" data-page="protocol">
       <i class="fas fa-file-code"></i> Protocol
     </a>
+    <a href="#" class="mobile-nav-link" data-page="contrast">
+      <i class="fas fa-code-branch"></i> Contrast
+    </a>
     <a href="#" class="mobile-nav-link" data-page="about">
       <i class="fas fa-circle-info"></i> About
     </a>
@@ -144,16 +153,39 @@
     </div>
   </nav>
 
+  <!-- ── MOBILE EVENTS DRAWER ── -->
+  <div class="events-drawer-overlay" id="eventsDrawerOverlay"></div>
+  <aside class="events-drawer" id="eventsDrawer" aria-label="Governance events drawer">
+    <div class="events-drawer-header">
+      <h3><i class="fas fa-broadcast-tower"></i> Governance Event Feed</h3>
+      <button class="icon-btn" id="closeEventsDrawerBtn" title="Close events"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="event-feed-controls event-feed-controls-drawer">
+      <span class="event-feed-label">Feed Mode</span>
+      <div class="event-feed-toggle" role="group" aria-label="Event feed mode mobile">
+        <button type="button" class="event-feed-toggle-btn active" id="feedModeDemoBtnMobile">Demo / Simulation</button>
+        <button type="button" class="event-feed-toggle-btn" id="feedModeLiveBtnMobile">Live</button>
+      </div>
+    </div>
+    <div class="event-feed-list" id="governanceEventFeedListMobile"></div>
+  </aside>
+
   <!-- ── STATUS STRIP ── -->
   <div class="status-strip">
     <div class="status-item">
       <span class="status-dot" id="policyEngineDot"></span>
       <span class="status-label">Policy Engine</span>
+      <button type="button" class="context-help-btn" data-help-title="Policy Engine" data-help-text="Shows whether command-governance rules are active before commands are sent to robots." aria-label="Explain Policy Engine">
+        <i class="fas fa-circle-question"></i>
+      </button>
       <span class="status-value" id="policyEngineStatus">Online</span>
     </div>
     <div class="status-divider"></div>
     <div class="status-item">
       <span class="status-label">Simulation Mode</span>
+      <button type="button" class="context-help-btn" data-help-title="Simulation Mode" data-help-text="Shows whether robots are running in simulation instead of live hardware." aria-label="Explain Simulation Mode">
+        <i class="fas fa-circle-question"></i>
+      </button>
       <span class="status-badge badge-sim" id="simModeIndicator">ON</span>
       <label class="toggle-sm">
         <input type="checkbox" id="simModeToggle" checked />
@@ -163,19 +195,31 @@
     <div class="status-divider"></div>
     <div class="status-item">
       <span class="status-label">Connected Robots</span>
+      <button type="button" class="context-help-btn" data-help-title="Connected Robots" data-help-text="Shows how many registered robots are currently connected and ready to receive commands." aria-label="Explain Connected Robots">
+        <i class="fas fa-circle-question"></i>
+      </button>
       <span class="status-value" id="connectedRobotsCount">2 / 3</span>
     </div>
     <div class="status-divider"></div>
     <div class="status-item">
       <span class="status-label">Operator</span>
+      <button type="button" class="context-help-btn" data-help-title="Operator" data-help-text="Shows the signed-in user currently supervising robot operations in this session." aria-label="Explain Operator">
+        <i class="fas fa-circle-question"></i>
+      </button>
       <span class="status-value" id="operatorName">operator</span>
     </div>
     <div class="status-divider"></div>
     <div class="status-item">
       <span class="status-label">Last Decision</span>
+      <button type="button" class="context-help-btn" data-help-title="Last Decision" data-help-text="Shows the latest policy outcome, such as approved, blocked, or pending review." aria-label="Explain Last Decision">
+        <i class="fas fa-circle-question"></i>
+      </button>
       <span class="status-value" id="lastDecisionStatus">—</span>
     </div>
     <div class="status-strip-right">
+      <button class="btn-ghost btn-xs" id="eventsDrawerBtn" title="Open Governance Events">
+        <i class="fas fa-bell"></i> Events <span class="events-count-badge" id="eventsCountBadge">0</span>
+      </button>
       <button class="btn-ghost btn-xs" id="resetDemoBtn">
         <i class="fas fa-rotate-left"></i> Reset Demo
       </button>
@@ -192,8 +236,13 @@
         <!-- ── Dashboard Pulse ── -->
         <section class="dashboard-pulse" id="dashboardPulse" aria-label="Dashboard pulse metrics">
           <div class="pulse-item">
-            <span class="pulse-label">Fleet Health</span>
+            <span class="pulse-label pulse-label-help">Fleet Health
+              <button type="button" class="context-help-btn" data-help-title="Fleet Health" data-help-text="Fleet Health is an overall readiness score based on robot connectivity and battery condition across the fleet." aria-label="Explain Fleet Health">
+                <i class="fas fa-circle-question"></i>
+              </button>
+            </span>
             <span class="pulse-value" id="pulseFleetHealth">--%</span>
+            <span class="pulse-subtext" id="pulseFleetHealthHint">Readiness summary for connected robots.</span>
           </div>
           <div class="pulse-item">
             <span class="pulse-label">Connected</span>
@@ -585,6 +634,22 @@
               </tbody>
             </table>
           </div>
+        </section>
+
+        <!-- ── Panel G: Governance Event Feed ── -->
+        <section class="panel panel-event-feed" id="panelEventFeed" aria-label="Governance Event Feed">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-broadcast-tower"></i></span>
+            <h2 class="panel-title">Governance Event Feed</h2>
+          </div>
+          <div class="event-feed-controls">
+            <span class="event-feed-label">Feed Mode</span>
+            <div class="event-feed-toggle" role="group" aria-label="Event feed mode">
+              <button type="button" class="event-feed-toggle-btn active" id="feedModeDemoBtn">Demo / Simulation</button>
+              <button type="button" class="event-feed-toggle-btn" id="feedModeLiveBtn">Live</button>
+            </div>
+          </div>
+          <div class="event-feed-list" id="governanceEventFeedList"></div>
         </section>
 
       </div><!-- /dashboard-grid -->
@@ -1253,6 +1318,159 @@
 
       </div><!-- /protocol-page-wrap -->
     </div><!-- /pageProtocol -->
+
+    <!-- ===== CONTRAST PAGE ===== -->
+    <div id="pageContrast" class="page hidden">
+      <div class="page-inner contrast-page-wrap">
+        <div class="page-header-row contrast-header-row">
+          <div>
+            <h2 class="page-h2"><i class="fas fa-code-branch"></i> Autonomy vs Governance</h2>
+            <p class="contrast-subtitle">Compare standard autonomous execution with the Reydious execution governance layer.</p>
+            <p class="contrast-subline">Robots already know how to move. <strong>Reydious governs how they execute.</strong></p>
+          </div>
+          <div class="contrast-header-actions">
+            <div class="contrast-mode-block">
+              <div class="contrast-mode-label">Execution Mode</div>
+              <div class="contrast-mode-desc">Governance OFF: Operator command → robot executes</div>
+              <div class="contrast-mode-desc">Governance ON: Operator command → policy validation → allowed / blocked → execution</div>
+              <div class="contrast-toggle" role="group" aria-label="Governance mode">
+                <button class="contrast-toggle-btn" id="governanceOffBtn" type="button">Governance OFF</button>
+                <button class="contrast-toggle-btn active" id="governanceOnBtn" type="button">Governance ON</button>
+              </div>
+            </div>
+            <button class="btn-primary btn-sm" id="replayScenarioBtn">
+              <i class="fas fa-play"></i> Replay Scenario
+            </button>
+          </div>
+        </div>
+
+        <section class="panel contrast-system-banner" id="contrastSystemBanner">
+          <div class="contrast-banner-item"><span class="contrast-banner-label">Execution Mode</span><span class="contrast-banner-value" id="contrastExecMode">Governed</span></div>
+          <div class="contrast-banner-item"><span class="contrast-banner-label">System Authority</span><span class="contrast-banner-value" id="contrastAuthority">Operator</span></div>
+          <div class="contrast-banner-item"><span class="contrast-banner-label">Risk Level</span><span class="contrast-banner-value is-nominal" id="contrastRiskLevel">Nominal</span></div>
+          <div class="contrast-banner-item"><span class="contrast-banner-label">Policy Engine</span><span class="contrast-banner-value" id="contrastPolicyEngine">Online</span></div>
+        </section>
+
+        <div class="panel contrast-scenario-panel">
+          <div class="contrast-segmented" id="contrastScenarioSwitcher" role="group" aria-label="Scenario selector">
+            <button class="contrast-segment-btn active" type="button" data-scenario="Unsafe Speed">Unsafe Speed</button>
+            <button class="contrast-segment-btn" type="button" data-scenario="Operator Fatigue">Operator Fatigue</button>
+            <button class="contrast-segment-btn" type="button" data-scenario="Sensor Glitch">Sensor Glitch</button>
+            <button class="contrast-segment-btn" type="button" data-scenario="Fragile Object">Fragile Object</button>
+            <button class="contrast-segment-btn" type="button" data-scenario="Config Change">Config Change</button>
+            <button class="contrast-segment-btn" type="button" data-scenario="Diagnostic Fault">Diagnostic Fault</button>
+          </div>
+        </div>
+
+        <div class="contrast-main-grid">
+          <section class="panel contrast-panel" id="standardPanel">
+            <div class="panel-header">
+              <span class="panel-icon"><i class="fas fa-microchip"></i></span>
+              <h3 class="panel-title">Autonomous System (Baseline)</h3>
+            </div>
+            <div class="contrast-body">
+              <div class="contrast-flow-caption">
+                <div class="contrast-flow-line">Operator Command</div>
+                <div class="contrast-flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                <div class="contrast-flow-line">Robot Executes</div>
+                <div class="contrast-flow-note">Most autonomy platforms execute commands directly once issued.</div>
+              </div>
+              <div class="contrast-pipeline" id="standardPipeline">
+                <div class="contrast-step" data-step="Sensors">Sensors</div>
+                <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
+                <div class="contrast-step" data-step="Perception">Perception</div>
+                <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
+                <div class="contrast-step" data-step="Planning">Planning</div>
+                <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
+                <div class="contrast-step" data-step="Control">Control</div>
+                <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
+                <div class="contrast-step" data-step="Actuation">Actuation</div>
+              </div>
+              <div class="contrast-status-list" id="standardStatusList"></div>
+            </div>
+          </section>
+
+          <section class="panel contrast-panel" id="governedPanel">
+            <div class="panel-header">
+              <span class="panel-icon"><i class="fas fa-shield-halved"></i></span>
+              <h3 class="panel-title">Reydious Execution Governance Layer</h3>
+            </div>
+            <div class="contrast-body">
+              <p class="contrast-panel-desc">Operator commands are validated, constrained, and monitored before execution.</p>
+              <div class="contrast-pipeline" id="governedPipeline">
+                <div class="contrast-step" data-step="Operator Command">Operator Command</div>
+                <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
+                <div class="contrast-step" data-step="Authority Check">Authority Check</div>
+                <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
+                <div class="contrast-step contrast-step-checkpoint" data-step="Policy Validation">Policy Validation <span class="contrast-checkpoint-label">Governance Checkpoint</span></div>
+                <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
+                <div class="contrast-step" data-step="Safety Envelope">Safety Envelope</div>
+                <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
+                <div class="contrast-step" data-step="Execution Decision">Execution Decision</div>
+                <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
+                <div class="contrast-step" data-step="Execute / Block / Safe Stop">Execute / Block / Safe Stop</div>
+                <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
+                <div class="contrast-step" data-step="Audit Log">Audit Log</div>
+              </div>
+              <div class="contrast-monitor-parallel"><i class="fas fa-radar"></i> Anomaly Monitor (continuous)</div>
+              <div class="contrast-badges" id="contrastInterventionBadges"></div>
+              <div class="contrast-status-list" id="governedStatusList"></div>
+            </div>
+          </section>
+        </div>
+
+        <section class="panel contrast-timeline-panel">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-wave-square"></i></span>
+            <h3 class="panel-title">Mission-Control Decision Timeline</h3>
+          </div>
+          <div class="contrast-timeline" id="contrastTimeline"></div>
+        </section>
+
+        <section class="panel contrast-authority-panel">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-sitemap"></i></span>
+            <h3 class="panel-title">Command Authority Chain</h3>
+          </div>
+          <div class="contrast-authority-chain" id="contrastAuthorityChain">
+            <div class="contrast-authority-step" data-authority="Operator">Operator</div>
+            <div class="contrast-authority-arrow"><i class="fas fa-arrow-down"></i></div>
+            <div class="contrast-authority-step" data-authority="Mission Policy">Mission Policy</div>
+            <div class="contrast-authority-arrow"><i class="fas fa-arrow-down"></i></div>
+            <div class="contrast-authority-step" data-authority="System Safety Envelope">System Safety Envelope</div>
+            <div class="contrast-authority-arrow"><i class="fas fa-arrow-down"></i></div>
+            <div class="contrast-authority-step" data-authority="Vehicle Control Layer">Vehicle Control Layer</div>
+            <div class="contrast-authority-arrow"><i class="fas fa-arrow-down"></i></div>
+            <div class="contrast-authority-step" data-authority="Robot Execution">Robot Execution</div>
+          </div>
+          <div class="contrast-authority-note" id="contrastAuthorityNote"></div>
+        </section>
+
+        <div class="contrast-capability-heading">Capabilities Added by Reydious</div>
+        <div class="contrast-lower-grid" id="contrastLowerGrid">
+          <section class="panel contrast-info-card">
+            <div class="panel-header"><h3 class="panel-title">Decision Traceability</h3></div>
+            <div class="contrast-info-list" id="decisionTraceability"></div>
+          </section>
+          <section class="panel contrast-info-card">
+            <div class="panel-header"><h3 class="panel-title">Operator State</h3></div>
+            <div class="contrast-info-list" id="operatorStateCard"></div>
+          </section>
+          <section class="panel contrast-info-card">
+            <div class="panel-header"><h3 class="panel-title">Anomaly Detection</h3></div>
+            <div class="contrast-info-list" id="anomalyDetectionCard"></div>
+          </section>
+          <section class="panel contrast-info-card">
+            <div class="panel-header"><h3 class="panel-title">Configuration Governance</h3></div>
+            <div class="contrast-info-list" id="configurationGovernanceCard"></div>
+          </section>
+          <section class="panel contrast-info-card">
+            <div class="panel-header"><h3 class="panel-title">Diagnostic Repair</h3></div>
+            <div class="contrast-info-list" id="diagnosticRepairCard"></div>
+          </section>
+        </div>
+      </div>
+    </div>
 
     <!-- ===== ABOUT PAGE ===== -->
     <div id="pageAbout" class="page hidden">
