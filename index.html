@@ -1317,7 +1317,7 @@
                 <div class="contrast-flow-line">Operator Command</div>
                 <div class="contrast-flow-arrow"><i class="fas fa-arrow-down"></i></div>
                 <div class="contrast-flow-line">Robot Executes</div>
-                <div class="contrast-flow-note">Most autonomy platforms stop here.</div>
+                <div class="contrast-flow-note">Most autonomy platforms execute commands directly once issued.</div>
               </div>
               <div class="contrast-pipeline" id="standardPipeline">
                 <div class="contrast-step" data-step="Sensors">Sensors</div>
@@ -1328,7 +1328,7 @@
                 <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
                 <div class="contrast-step" data-step="Control">Control</div>
                 <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
-                <div class="contrast-step" data-step="Execute">Execute</div>
+                <div class="contrast-step" data-step="Actuation">Actuation</div>
               </div>
               <div class="contrast-status-list" id="standardStatusList"></div>
             </div>
@@ -1346,18 +1346,17 @@
                 <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
                 <div class="contrast-step" data-step="Authority Check">Authority Check</div>
                 <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
-                <div class="contrast-step" data-step="Policy Validation">Policy Validation</div>
+                <div class="contrast-step contrast-step-checkpoint" data-step="Policy Validation">Policy Validation <span class="contrast-checkpoint-label">Governance Checkpoint</span></div>
                 <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
-                <div class="contrast-step" data-step="Operator State Check">Operator State Check</div>
+                <div class="contrast-step" data-step="Safety Envelope">Safety Envelope</div>
                 <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
-                <div class="contrast-step" data-step="Anomaly Monitor">Anomaly Monitor</div>
-                <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
-                <div class="contrast-step" data-step="Decision">Decision</div>
+                <div class="contrast-step" data-step="Execution Decision">Execution Decision</div>
                 <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
                 <div class="contrast-step" data-step="Execute / Block / Safe Stop">Execute / Block / Safe Stop</div>
                 <div class="contrast-arrow"><i class="fas fa-angle-down"></i></div>
                 <div class="contrast-step" data-step="Audit Log">Audit Log</div>
               </div>
+              <div class="contrast-monitor-parallel"><i class="fas fa-radar"></i> Anomaly Monitor (continuous)</div>
               <div class="contrast-badges" id="contrastInterventionBadges"></div>
               <div class="contrast-status-list" id="governedStatusList"></div>
             </div>
@@ -1383,6 +1382,8 @@
             <div class="contrast-authority-step" data-authority="Mission Policy">Mission Policy</div>
             <div class="contrast-authority-arrow"><i class="fas fa-arrow-down"></i></div>
             <div class="contrast-authority-step" data-authority="System Safety Envelope">System Safety Envelope</div>
+            <div class="contrast-authority-arrow"><i class="fas fa-arrow-down"></i></div>
+            <div class="contrast-authority-step" data-authority="Vehicle Control Layer">Vehicle Control Layer</div>
             <div class="contrast-authority-arrow"><i class="fas fa-arrow-down"></i></div>
             <div class="contrast-authority-step" data-authority="Robot Execution">Robot Execution</div>
           </div>

@@ -3004,8 +3004,8 @@ function bindPasswordToggle() {
 
 const CONTRAST_SCENARIOS = {
   'Unsafe Speed': {
-    standard: ['Received', 'High-speed path', 'Sent', 'Executed'],
-    governed: ['Authority valid', 'Speed policy breach', 'Restricted', 'Blocked + logged'],
+    standard: ['Received', 'Command mapped to control loop', 'Sent', 'Actuated'],
+    governed: ['Authority check complete', 'Policy validation failed', 'Execution decision: blocked', 'Blocked + logged'],
     decision: 'BLOCKED',
     decisionReason: 'Rule R-01 max speed exceeded',
     operatorStatus: 'Alert',
@@ -3026,7 +3026,7 @@ const CONTRAST_SCENARIOS = {
     timeline: [
       { t: '00:00', label: 'Command Issued' },
       { t: '00:01', label: 'Planner Request' },
-      { t: '00:01', label: 'Policy Check', intervention: true },
+      { t: '00:01', label: 'Governance Check', intervention: true },
       { t: '00:02', label: 'Rule Triggered', intervention: true },
       { t: '00:02', label: 'Command Blocked', badge: '⚠ POLICY BLOCK', intervention: true },
       { t: '00:02', label: 'Audit Logged' },
@@ -3034,8 +3034,8 @@ const CONTRAST_SCENARIOS = {
     badges: ['⚠ POLICY BLOCK']
   },
   'Operator Fatigue': {
-    standard: ['Received', 'Planner active', 'Sent', 'Executed'],
-    governed: ['Authority valid', 'Fatigue signal high', 'Restricted', 'Safe stop + logged'],
+    standard: ['Received', 'Planner active', 'Sent', 'Actuated'],
+    governed: ['Authority check complete', 'Policy validation passed', 'Execution decision: safe stop', 'Safe stop + logged'],
     decision: 'SAFE STOP',
     decisionReason: 'Operator vigilance threshold failed',
     operatorStatus: 'Fatigued', authorityLevel: 'Restricted', commandRestriction: 'Manual-only',
@@ -3048,16 +3048,16 @@ const CONTRAST_SCENARIOS = {
     timeline: [
       { t: '00:00', label: 'Command Issued' },
       { t: '00:01', label: 'Planner Request' },
-      { t: '00:01', label: 'Operator State Check', intervention: true },
-      { t: '00:02', label: 'Authority Reduced', intervention: true },
+      { t: '00:01', label: 'Governance Check', intervention: true },
+      { t: '00:02', label: 'Rule Triggered', intervention: true },
       { t: '00:02', label: 'Safe Stop Triggered', badge: '🛑 SAFE STOP', intervention: true },
       { t: '00:02', label: 'Audit Logged' },
     ],
     badges: ['🛑 SAFE STOP']
   },
   'Sensor Glitch': {
-    standard: ['Received', 'Planner active', 'Sent', 'Executed'],
-    governed: ['Authority valid', 'Sensor anomaly found', 'Restricted', 'Blocked + logged'],
+    standard: ['Received', 'Planner active', 'Sent', 'Actuated'],
+    governed: ['Authority check complete', 'Policy validation failed', 'Execution decision: blocked', 'Blocked + logged'],
     decision: 'BLOCKED', decisionReason: 'Sensor confidence dropped below baseline',
     operatorStatus: 'Normal', authorityLevel: 'Operator', commandRestriction: 'No autonomy',
     expectedPattern: 'Consistent IMU + lidar', currentPattern: 'Intermittent sensor spikes', deviationAlert: 'Elevated',
@@ -3069,16 +3069,16 @@ const CONTRAST_SCENARIOS = {
     timeline: [
       { t: '00:00', label: 'Command Issued' },
       { t: '00:01', label: 'Planner Request' },
-      { t: '00:01', label: 'Anomaly Monitor', intervention: true },
-      { t: '00:02', label: 'Anomaly Detected', badge: '🔍 ANOMALY DETECTED', intervention: true },
+      { t: '00:01', label: 'Governance Check', intervention: true },
+      { t: '00:02', label: 'Rule Triggered', badge: '🔍 ANOMALY DETECTED', intervention: true },
       { t: '00:02', label: 'Command Blocked', badge: '⚠ POLICY BLOCK', intervention: true },
       { t: '00:02', label: 'Audit Logged' },
     ],
     badges: ['🔍 ANOMALY DETECTED', '⚠ POLICY BLOCK']
   },
   'Fragile Object': {
-    standard: ['Received', 'Planner active', 'Sent', 'Executed'],
-    governed: ['Authority valid', 'Policy context fragile load', 'Restricted', 'Approved + logged'],
+    standard: ['Received', 'Planner active', 'Sent', 'Actuated'],
+    governed: ['Authority check complete', 'Policy validation passed', 'Execution decision: approved', 'Approved + logged'],
     decision: 'APPROVED', decisionReason: 'Precision mode constraints satisfied',
     operatorStatus: 'Normal', authorityLevel: 'Operator', commandRestriction: 'Low-force only',
     expectedPattern: 'Soft trajectory profile', currentPattern: 'Within tolerance', deviationAlert: 'Nominal',
@@ -3090,16 +3090,16 @@ const CONTRAST_SCENARIOS = {
     timeline: [
       { t: '00:00', label: 'Command Issued' },
       { t: '00:01', label: 'Planner Request' },
-      { t: '00:01', label: 'Policy Validation', intervention: true },
-      { t: '00:02', label: 'Constraint Applied', intervention: true },
+      { t: '00:01', label: 'Governance Check', intervention: true },
+      { t: '00:02', label: 'Rule Triggered', intervention: true },
       { t: '00:02', label: 'Command Approved' },
       { t: '00:02', label: 'Audit Logged' },
     ],
     badges: []
   },
   'Config Change': {
-    standard: ['Received', 'Planner active', 'Sent', 'Executed'],
-    governed: ['Authority valid', 'Config governance invoked', 'Pending approval', 'Logged'],
+    standard: ['Received', 'Planner active', 'Sent', 'Actuated'],
+    governed: ['Authority check complete', 'Policy validation failed', 'Execution decision: blocked', 'Logged'],
     decision: 'BLOCKED', decisionReason: 'Unapproved configuration mutation',
     operatorStatus: 'Normal', authorityLevel: 'Supervisor', commandRestriction: 'No config writes',
     expectedPattern: 'Read-only operation', currentPattern: 'Config write request', deviationAlert: 'Elevated',
@@ -3111,16 +3111,16 @@ const CONTRAST_SCENARIOS = {
     timeline: [
       { t: '00:00', label: 'Command Issued' },
       { t: '00:01', label: 'Planner Request' },
-      { t: '00:01', label: 'Authority Check', intervention: true },
-      { t: '00:02', label: 'Supervisor Required', intervention: true },
+      { t: '00:01', label: 'Governance Check', intervention: true },
+      { t: '00:02', label: 'Rule Triggered', intervention: true },
       { t: '00:02', label: 'Change Denied', badge: '⚠ POLICY BLOCK', intervention: true },
       { t: '00:02', label: 'Audit Logged' },
     ],
     badges: ['⚠ POLICY BLOCK']
   },
   'Diagnostic Fault': {
-    standard: ['Received', 'Planner active', 'Sent', 'Executed with fault'],
-    governed: ['Authority valid', 'Fault monitor triggered', 'Safe stop', 'Logged + repair suggested'],
+    standard: ['Received', 'Planner active', 'Sent', 'Actuation fault'],
+    governed: ['Authority check complete', 'Policy validation passed', 'Execution decision: safe stop', 'Logged + repair suggested'],
     decision: 'SAFE STOP', decisionReason: 'Actuator fault confidence high',
     operatorStatus: 'Normal', authorityLevel: 'Restricted', commandRestriction: 'Diagnostics only',
     expectedPattern: 'Nominal motor current', currentPattern: 'Current spike burst', deviationAlert: 'Critical',
@@ -3132,8 +3132,8 @@ const CONTRAST_SCENARIOS = {
     timeline: [
       { t: '00:00', label: 'Command Issued' },
       { t: '00:01', label: 'Planner Request' },
-      { t: '00:01', label: 'Anomaly Monitor', intervention: true },
-      { t: '00:02', label: 'Fault Confidence High', badge: '🔍 ANOMALY DETECTED', intervention: true },
+      { t: '00:01', label: 'Governance Check', intervention: true },
+      { t: '00:02', label: 'Rule Triggered', badge: '🔍 ANOMALY DETECTED', intervention: true },
       { t: '00:02', label: 'Safe Stop Triggered', badge: '🛑 SAFE STOP', intervention: true },
       { t: '00:02', label: 'Audit Logged' },
     ],
@@ -3348,7 +3348,7 @@ function replayContrastScenario() {
     const toastType = decision === 'APPROVED' ? 'approved' : decision === 'SAFE STOP' ? 'warning' : 'blocked';
     showToast(`Step 4: ${decision} · Audit logged`, toastType);
     renderDecisionTimeline(scenario, scenario.timeline.length - 1);
-    renderAuthorityChain(scenario, decision === 'APPROVED' ? 3 : 1);
+    renderAuthorityChain(scenario, decision === 'APPROVED' ? 4 : 2);
     renderSystemBanner(scenario);
     renderInterventionBadges(scenario);
   }, 2100);
