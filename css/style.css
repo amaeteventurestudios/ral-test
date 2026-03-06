@@ -3147,6 +3147,18 @@ button:focus-visible, a:focus-visible {
   color: var(--muted);
   font-weight: 700;
 }
+
+.event-feed-label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.event-feed-label-row .context-help-btn {
+  display: inline-flex;
+  flex-shrink: 0;
+}
 .event-feed-toggle {
   display: inline-flex;
   border: 1px solid var(--border);
