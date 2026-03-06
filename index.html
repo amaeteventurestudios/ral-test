@@ -153,6 +153,23 @@
     </div>
   </nav>
 
+  <!-- ── MOBILE EVENTS DRAWER ── -->
+  <div class="events-drawer-overlay" id="eventsDrawerOverlay"></div>
+  <aside class="events-drawer" id="eventsDrawer" aria-label="Governance events drawer">
+    <div class="events-drawer-header">
+      <h3><i class="fas fa-broadcast-tower"></i> Governance Event Feed</h3>
+      <button class="icon-btn" id="closeEventsDrawerBtn" title="Close events"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="event-feed-controls event-feed-controls-drawer">
+      <span class="event-feed-label">Feed Mode</span>
+      <div class="event-feed-toggle" role="group" aria-label="Event feed mode mobile">
+        <button type="button" class="event-feed-toggle-btn active" id="feedModeDemoBtnMobile">Demo / Simulation</button>
+        <button type="button" class="event-feed-toggle-btn" id="feedModeLiveBtnMobile">Live</button>
+      </div>
+    </div>
+    <div class="event-feed-list" id="governanceEventFeedListMobile"></div>
+  </aside>
+
   <!-- ── STATUS STRIP ── -->
   <div class="status-strip">
     <div class="status-item">
@@ -185,6 +202,9 @@
       <span class="status-value" id="lastDecisionStatus">—</span>
     </div>
     <div class="status-strip-right">
+      <button class="btn-ghost btn-xs" id="eventsDrawerBtn" title="Open Governance Events">
+        <i class="fas fa-bell"></i> Events <span class="events-count-badge" id="eventsCountBadge">0</span>
+      </button>
       <button class="btn-ghost btn-xs" id="resetDemoBtn">
         <i class="fas fa-rotate-left"></i> Reset Demo
       </button>
@@ -594,6 +614,22 @@
               </tbody>
             </table>
           </div>
+        </section>
+
+        <!-- ── Panel G: Governance Event Feed ── -->
+        <section class="panel panel-event-feed" id="panelEventFeed" aria-label="Governance Event Feed">
+          <div class="panel-header">
+            <span class="panel-icon"><i class="fas fa-broadcast-tower"></i></span>
+            <h2 class="panel-title">Governance Event Feed</h2>
+          </div>
+          <div class="event-feed-controls">
+            <span class="event-feed-label">Feed Mode</span>
+            <div class="event-feed-toggle" role="group" aria-label="Event feed mode">
+              <button type="button" class="event-feed-toggle-btn active" id="feedModeDemoBtn">Demo / Simulation</button>
+              <button type="button" class="event-feed-toggle-btn" id="feedModeLiveBtn">Live</button>
+            </div>
+          </div>
+          <div class="event-feed-list" id="governanceEventFeedList"></div>
         </section>
 
       </div><!-- /dashboard-grid -->
