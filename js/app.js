@@ -18,6 +18,9 @@ const STATE = {
   activeTeleRobot: 'R-01',
   draftCommand: null,
   lastDecision: null,
+  contrastGovernance: true,
+  contrastScenario: 'Unsafe Speed',
+  contrastReplayTimer: null,
   auditLog: [],
   commandQueue: [],            // Command queue array
   robots: {},
@@ -140,6 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showLogin();
   }
   bindLoginForm();
+  bindPasswordToggle();
 });
 
 function deepCopyRobots() {
@@ -286,6 +290,7 @@ function initApp() {
   bindChartsToggle();
   bindRobotsPage();
   bindLogResizer();
+  bindContrastPage();
 
   // Clear queue button
   document.getElementById('clearQueueBtn')?.addEventListener('click', () => {
@@ -361,6 +366,7 @@ function navigateTo(page) {
   if (page === 'about')    updateAboutPage();
   if (page === 'robots')   renderRobotsPageList();
   if (page === 'protocol') { /* static page, no init needed */ }
+  if (page === 'contrast') renderContrastPage();
 
   const main = document.getElementById('mainContent');
   if (main) main.scrollTop = 0;
@@ -2977,4 +2983,219 @@ function showManualCmdStatus(type, message) {
     : type === 'pending' ? 'fa-spinner fa-spin'
     : 'fa-circle-xmark';
   el.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
+}
+
+
+function bindPasswordToggle() {
+  const toggleBtn = document.getElementById('passwordToggleBtn');
+  const pwInput = document.getElementById('password');
+  const icon = document.getElementById('passwordToggleIcon');
+  if (!toggleBtn || !pwInput || !icon) return;
+
+  toggleBtn.addEventListener('click', () => {
+    const showing = pwInput.type === 'text';
+    pwInput.type = showing ? 'password' : 'text';
+    icon.classList.toggle('fa-eye', showing);
+    icon.classList.toggle('fa-eye-slash', !showing);
+    toggleBtn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    toggleBtn.setAttribute('aria-pressed', String(!showing));
+  });
+}
+
+const CONTRAST_SCENARIOS = {
+  'Unsafe Speed': {
+    standard: ['Received', 'High-speed path', 'Sent', 'Executed'],
+    governed: ['Authority valid', 'Speed policy breach', 'Restricted', 'Blocked + logged'],
+    decision: 'BLOCKED',
+    decisionReason: 'Rule R-01 max speed exceeded',
+    operatorStatus: 'Alert',
+    authorityLevel: 'L2',
+    commandRestriction: 'Speed-limited',
+    expectedPattern: 'Speed < 60 indoor',
+    currentPattern: 'Speed request 90',
+    deviationAlert: 'Critical',
+    configChange: 'Motor limit override',
+    approvalRequirement: 'Supervisor + policy',
+    approvalResult: 'Denied',
+    faultDetected: 'Overspeed risk',
+    correction: 'Throttle to 55',
+    updateStatus: 'Patch not required'
+  },
+  'Operator Fatigue': {
+    standard: ['Received', 'Planner active', 'Sent', 'Executed'],
+    governed: ['Authority valid', 'Fatigue signal high', 'Restricted', 'Safe stop + logged'],
+    decision: 'SAFE STOP',
+    decisionReason: 'Operator vigilance threshold failed',
+    operatorStatus: 'Fatigued', authorityLevel: 'L2', commandRestriction: 'Manual-only',
+    expectedPattern: 'Stable operator biometrics', currentPattern: 'High fatigue score', deviationAlert: 'Elevated',
+    configChange: 'N/A', approvalRequirement: 'N/A', approvalResult: 'N/A',
+    faultDetected: 'Human-factor risk', correction: 'Require relief operator', updateStatus: 'Pending reassignment'
+  },
+  'Sensor Glitch': {
+    standard: ['Received', 'Planner active', 'Sent', 'Executed'],
+    governed: ['Authority valid', 'Sensor anomaly found', 'Restricted', 'Blocked + logged'],
+    decision: 'RESTRICTED', decisionReason: 'Sensor confidence dropped below baseline',
+    operatorStatus: 'Normal', authorityLevel: 'L3', commandRestriction: 'No autonomy',
+    expectedPattern: 'Consistent IMU + lidar', currentPattern: 'Intermittent sensor spikes', deviationAlert: 'Medium',
+    configChange: 'Sensor recalibration', approvalRequirement: 'Policy check', approvalResult: 'Approved',
+    faultDetected: 'IMU jitter', correction: 'Switch to fallback sensor fusion', updateStatus: 'Applied'
+  },
+  'Fragile Object': {
+    standard: ['Received', 'Planner active', 'Sent', 'Executed'],
+    governed: ['Authority valid', 'Policy context fragile load', 'Restricted', 'Approved + logged'],
+    decision: 'APPROVED', decisionReason: 'Precision mode constraints satisfied',
+    operatorStatus: 'Normal', authorityLevel: 'L2', commandRestriction: 'Low-force only',
+    expectedPattern: 'Soft trajectory profile', currentPattern: 'Within tolerance', deviationAlert: 'None',
+    configChange: 'Grip-force profile', approvalRequirement: 'Dual approval', approvalResult: 'Approved',
+    faultDetected: 'No fault', correction: 'Maintain precision profile', updateStatus: 'Stable'
+  },
+  'Config Change': {
+    standard: ['Received', 'Planner active', 'Sent', 'Executed'],
+    governed: ['Authority valid', 'Config governance invoked', 'Pending approval', 'Logged'],
+    decision: 'BLOCKED', decisionReason: 'Unapproved configuration mutation',
+    operatorStatus: 'Normal', authorityLevel: 'L1', commandRestriction: 'No config writes',
+    expectedPattern: 'Read-only operation', currentPattern: 'Config write request', deviationAlert: 'High',
+    configChange: 'Navigation stack edit', approvalRequirement: 'Admin sign-off', approvalResult: 'Rejected',
+    faultDetected: 'Config drift attempt', correction: 'Rollback + lock config', updateStatus: 'Locked'
+  },
+  'Diagnostic Fault': {
+    standard: ['Received', 'Planner active', 'Sent', 'Executed with fault'],
+    governed: ['Authority valid', 'Fault monitor triggered', 'Safe stop', 'Logged + repair suggested'],
+    decision: 'SAFE STOP', decisionReason: 'Actuator fault confidence high',
+    operatorStatus: 'Normal', authorityLevel: 'L3', commandRestriction: 'Diagnostics only',
+    expectedPattern: 'Nominal motor current', currentPattern: 'Current spike burst', deviationAlert: 'Critical',
+    configChange: 'Firmware patch', approvalRequirement: 'Maintenance approval', approvalResult: 'Approved',
+    faultDetected: 'Motor controller fault', correction: 'Load fallback profile + reboot', updateStatus: 'In progress'
+  },
+};
+
+function bindContrastPage() {
+  const switcher = document.getElementById('contrastScenarioSwitcher');
+  if (switcher) {
+    switcher.querySelectorAll('.contrast-segment-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        STATE.contrastScenario = btn.dataset.scenario;
+        renderContrastPage();
+      });
+    });
+  }
+
+  document.getElementById('governanceOffBtn')?.addEventListener('click', () => {
+    STATE.contrastGovernance = false;
+    renderContrastPage();
+  });
+  document.getElementById('governanceOnBtn')?.addEventListener('click', () => {
+    STATE.contrastGovernance = true;
+    renderContrastPage();
+  });
+
+  document.getElementById('replayScenarioBtn')?.addEventListener('click', replayContrastScenario);
+  renderContrastPage();
+}
+
+function renderContrastPage() {
+  const scenario = CONTRAST_SCENARIOS[STATE.contrastScenario] || CONTRAST_SCENARIOS['Unsafe Speed'];
+  const effectiveDecision = STATE.contrastGovernance ? scenario.decision : 'EXECUTED';
+  const effectiveReason = STATE.contrastGovernance ? scenario.decisionReason : 'No governance checks applied';
+
+  document.querySelectorAll('.contrast-segment-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.scenario === STATE.contrastScenario);
+  });
+  document.getElementById('governanceOffBtn')?.classList.toggle('active', !STATE.contrastGovernance);
+  document.getElementById('governanceOnBtn')?.classList.toggle('active', STATE.contrastGovernance);
+
+  const standardRows = [
+    ['Command Received', scenario.standard[0]],
+    ['Planner Active', scenario.standard[1]],
+    ['Execution Sent', scenario.standard[2]],
+    ['Result', scenario.standard[3]],
+  ];
+  const governedRows = [
+    ['Command Received', 'Queued for governance'],
+    ['Pipeline State', scenario.governed[1]],
+    ['Decision', effectiveDecision],
+    ['Audit', scenario.governed[3]],
+  ];
+  renderStatusRows('standardStatusList', standardRows);
+  renderStatusRows('governedStatusList', governedRows);
+
+  renderInfoRows('decisionTraceability', [
+    ['command ID', generateId().slice(0, 8)],
+    ['rule triggered', effectiveReason],
+    ['decision', effectiveDecision],
+    ['timestamp', new Date().toLocaleTimeString()],
+  ]);
+  renderInfoRows('operatorStateCard', [
+    ['operator status', scenario.operatorStatus],
+    ['authority level', scenario.authorityLevel],
+    ['command restriction', scenario.commandRestriction],
+  ]);
+  renderInfoRows('anomalyDetectionCard', [
+    ['expected pattern', scenario.expectedPattern],
+    ['current pattern', scenario.currentPattern],
+    ['deviation alert', scenario.deviationAlert],
+  ]);
+  renderInfoRows('configurationGovernanceCard', [
+    ['attempted config change', scenario.configChange],
+    ['approval requirement', scenario.approvalRequirement],
+    ['approval result', STATE.contrastGovernance ? scenario.approvalResult : 'Not required'],
+  ]);
+  renderInfoRows('diagnosticRepairCard', [
+    ['fault detected', scenario.faultDetected],
+    ['suggested correction', scenario.correction],
+    ['system update status', scenario.updateStatus],
+  ]);
+}
+
+function renderStatusRows(containerId, rows) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = rows.map(([k, v]) => `<div class="contrast-status-row"><span>${k}</span><span>${v}</span></div>`).join('');
+}
+
+function renderInfoRows(containerId, rows) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = rows.map(([k, v]) => `<div class="contrast-info-row"><span>${k}</span><span>${v}</span></div>`).join('');
+}
+
+function replayContrastScenario() {
+  if (STATE.contrastReplayTimer) {
+    clearTimeout(STATE.contrastReplayTimer);
+    STATE.contrastReplayTimer = null;
+  }
+  const standardSteps = [...document.querySelectorAll('#standardPipeline .contrast-step')];
+  const governedSteps = [...document.querySelectorAll('#governedPipeline .contrast-step')];
+  [...standardSteps, ...governedSteps].forEach(step => step.classList.remove('active', 'done'));
+
+  const highlight = (steps, index, doneBefore = true) => {
+    steps.forEach((s, i) => {
+      s.classList.toggle('done', doneBefore && i < index);
+      s.classList.toggle('active', i === index);
+    });
+  };
+
+  showToast('Command issued', 'info');
+  STATE.contrastReplayTimer = setTimeout(() => {
+    showToast('Standard autonomy executes immediately', 'approved');
+    highlight(standardSteps, Math.max(0, standardSteps.length - 1));
+  }, 400);
+
+  STATE.contrastReplayTimer = setTimeout(() => {
+    showToast('Governance pipeline evaluating command', 'info');
+    let idx = 0;
+    const interval = setInterval(() => {
+      highlight(governedSteps, idx);
+      idx += 1;
+      if (idx >= governedSteps.length) clearInterval(interval);
+    }, 220);
+  }, 950);
+
+  STATE.contrastReplayTimer = setTimeout(() => {
+    const scenario = CONTRAST_SCENARIOS[STATE.contrastScenario] || CONTRAST_SCENARIOS['Unsafe Speed'];
+    const decision = STATE.contrastGovernance ? scenario.decision : 'EXECUTED';
+    const toastType = decision === 'APPROVED' || decision === 'EXECUTED' ? 'approved' : decision === 'SAFE STOP' ? 'warning' : 'blocked';
+    showToast(`Decision: ${decision} · Log entry recorded`, toastType);
+    renderContrastPage();
+  }, 3200);
 }
