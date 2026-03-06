@@ -324,6 +324,20 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   color: var(--muted);
 }
 
+.context-help-inline {
+  width: 14px;
+  height: 14px;
+  font-size: 8px;
+  margin-top: 2px;
+}
+.context-help-th {
+  width: 14px;
+  height: 14px;
+  font-size: 8px;
+  margin-left: 0.22rem;
+  vertical-align: middle;
+}
+
 /* ── MAIN CONTENT ── */
 #mainContent {
   position: relative; z-index: 1;
@@ -2039,6 +2053,9 @@ button:focus-visible, a:focus-visible {
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
+.pipeline-step .context-help-inline {
+  opacity: 0.85;
+}
 .pipeline-step.active { background: var(--accent-dim); }
 .pipeline-step.active i { color: var(--accent); }
 .pipeline-step.active span { color: var(--accent); }
@@ -2382,6 +2399,8 @@ button:focus-visible, a:focus-visible {
   .status-item .status-label,
   .status-item .status-value { word-break: break-word; }
   .context-help-btn { width: 18px; height: 18px; }
+  .context-help-inline,
+  .context-help-th { width: 16px; height: 16px; }
   .status-strip-right {
     margin-left: 0;
     padding-left: 0;
@@ -3267,6 +3286,7 @@ button:focus-visible, a:focus-visible {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  margin-right: auto;
 }
 .events-drawer-header h3 i { color: var(--accent); }
 .event-feed-controls-drawer { flex-shrink: 0; }
