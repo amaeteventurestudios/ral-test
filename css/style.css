@@ -3559,10 +3559,11 @@ button:focus-visible, a:focus-visible {
 ═══════════════════════════════════ */
 @media (min-width: 768px) and (max-width: 1023px) {
   .dashboard-grid {
-    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr) auto auto !important;
+    grid-template-rows: auto minmax(0, 1.05fr) minmax(0, 1.05fr) minmax(0, 0.5fr) minmax(0, 0.62fr) !important;
     height: calc(100vh - var(--nav-h) - var(--strip-h) - 2rem) !important;
-    min-height: 640px !important;
+    min-height: 600px !important;
     align-items: stretch;
+    overflow: hidden;
   }
 
   .panel-fleet,
@@ -3573,6 +3574,36 @@ button:focus-visible, a:focus-visible {
   .panel-log,
   .panel-event-feed {
     min-height: 0;
+  }
+
+  .panel-fleet,
+  .panel-console,
+  .panel-policy,
+  .panel-telemetry,
+  .panel-queue,
+  .panel-log {
+    height: 100%;
+    max-height: 100%;
+  }
+
+  .panel-fleet .robot-list,
+  #panelTelemetry #telemetryContent,
+  #panelQueue .queue-list,
+  #panelLog .log-table-wrap,
+  #panelLog .log-card-list {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  #panelConsole {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  #panelConsole .panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--surface);
   }
 
   .panel-event-feed {
@@ -3591,10 +3622,11 @@ button:focus-visible, a:focus-visible {
 
 @media (min-width: 1024px) {
   .dashboard-grid {
-    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr) auto auto !important;
+    grid-template-rows: auto minmax(0, 1.05fr) minmax(0, 1.05fr) minmax(0, 0.48fr) minmax(0, 0.6fr) !important;
     height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.15rem) !important;
-    min-height: 700px !important;
+    min-height: 620px !important;
     align-items: stretch;
+    overflow: hidden;
   }
 
   .panel-fleet,
@@ -3605,6 +3637,36 @@ button:focus-visible, a:focus-visible {
   .panel-log,
   .panel-event-feed {
     min-height: 0;
+  }
+
+  .panel-fleet,
+  .panel-console,
+  .panel-policy,
+  .panel-telemetry,
+  .panel-queue,
+  .panel-log {
+    height: 100%;
+    max-height: 100%;
+  }
+
+  .panel-fleet .robot-list,
+  #panelTelemetry #telemetryContent,
+  #panelQueue .queue-list,
+  #panelLog .log-table-wrap,
+  #panelLog .log-card-list {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  #panelConsole {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  #panelConsole .panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--surface);
   }
 
   .panel-event-feed {
