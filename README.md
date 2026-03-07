@@ -156,3 +156,24 @@ vercel.json         X-Robots-Tag headers + SPA rewrites
 - Video feed integration from robot cameras
 - Firmware OTA update via dashboard
 - Export audit logs to remote logging service
+
+---
+
+## Local Preview (Static Site)
+
+This repo is a static HTML app (no `package.json`, no framework dev server required).
+
+Use the helper script so the server always starts from the correct folder:
+
+```bash
+./scripts/serve-static.sh 8000
+```
+
+Then open:
+
+- `http://127.0.0.1:8000/`
+- `http://127.0.0.1:8000/index.html`
+
+### Why the previous 404 happened
+
+`python3 -m http.server` serves the **current working directory**. If it is started from the wrong folder (for example `/workspace` instead of `/workspace/ral-test`), `/index.html` returns `404` because that directory has no app `index.html`.
