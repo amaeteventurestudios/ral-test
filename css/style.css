@@ -3559,10 +3559,12 @@ button:focus-visible, a:focus-visible {
 ═══════════════════════════════════ */
 @media (min-width: 768px) and (max-width: 1023px) {
   .dashboard-grid {
-    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1.18fr) minmax(0, 0.32fr) minmax(280px, 0.9fr) !important;
-    height: auto !important;
-    min-height: calc(100vh - var(--nav-h) - var(--strip-h) - 2rem) !important;
+    grid-template-rows: auto minmax(160px, 0.42fr) minmax(220px, 0.5fr) minmax(72px, 0.18fr) minmax(220px, 0.5fr) !important;
+    height: calc(100vh - var(--nav-h) - var(--strip-h) - 2rem) !important;
+    min-height: 700px !important;
+    max-height: calc(100vh - var(--nav-h) - var(--strip-h) - 2rem) !important;
     align-items: stretch;
+    overflow: hidden;
   }
 
   .panel-fleet,
@@ -3600,7 +3602,7 @@ button:focus-visible, a:focus-visible {
 
   #panelLog .log-table-wrap,
   #panelLog .log-card-list {
-    min-height: clamp(240px, 28vh, 320px);
+    min-height: clamp(220px, 30vh, 320px);
     max-height: none !important;
     overflow-y: auto;
   }
@@ -3631,6 +3633,7 @@ button:focus-visible, a:focus-visible {
     align-self: stretch;
     height: 100%;
     max-height: 100%;
+    min-height: 0;
     overflow: hidden;
   }
   .panel-event-feed .event-feed-list {
@@ -3643,10 +3646,12 @@ button:focus-visible, a:focus-visible {
 
 @media (min-width: 1024px) {
   .dashboard-grid {
-    grid-template-rows: auto minmax(0, 0.95fr) minmax(0, 1.4fr) minmax(0, 0.22fr) minmax(280px, 0.78fr) !important;
-    height: auto !important;
-    min-height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.15rem) !important;
+    grid-template-rows: auto minmax(170px, 0.44fr) minmax(240px, 0.56fr) minmax(78px, 0.18fr) minmax(250px, 0.5fr) !important;
+    height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.15rem) !important;
+    min-height: 760px !important;
+    max-height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.15rem) !important;
     align-items: stretch;
+    overflow: hidden;
   }
 
   .panel-fleet,
@@ -3684,7 +3689,7 @@ button:focus-visible, a:focus-visible {
 
   #panelLog .log-table-wrap,
   #panelLog .log-card-list {
-    min-height: clamp(280px, 32vh, 360px);
+    min-height: clamp(260px, 34vh, 380px);
     max-height: none !important;
     overflow-y: auto;
   }
@@ -3715,6 +3720,7 @@ button:focus-visible, a:focus-visible {
     align-self: stretch;
     height: 100%;
     max-height: 100%;
+    min-height: 0;
     overflow: hidden;
   }
   .panel-event-feed .event-feed-list {
