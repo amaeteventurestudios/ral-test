@@ -3658,12 +3658,12 @@ button:focus-visible, a:focus-visible {
   /* ── Event Feed: stretches to match rows 2-5, scrolls internally ── */
   .panel-event-feed {
     overflow: hidden;
-    align-self: start;
+    align-self: stretch;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 205px);
-    min-height: 520px;
-    max-height: calc(100vh - 205px);
+    height: auto;
+    min-height: 0;
+    max-height: none;
   }
   .panel-event-feed .event-feed-list {
     flex: 1 1 0;
