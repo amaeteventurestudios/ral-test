@@ -3674,6 +3674,10 @@ button:focus-visible, a:focus-visible {
     max-height: 100%;
   }
 
+  .panel-telemetry {
+    min-height: 340px;
+  }
+
   .panel-fleet .robot-list,
   #panelQueue .queue-list,
   #panelLog .log-table-wrap,
