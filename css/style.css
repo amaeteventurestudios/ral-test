@@ -3559,7 +3559,7 @@ button:focus-visible, a:focus-visible {
 ═══════════════════════════════════ */
 @media (min-width: 768px) and (max-width: 1023px) {
   .dashboard-grid {
-    grid-template-rows: auto minmax(0, 1.1fr) minmax(0, 1.45fr) minmax(0, 0.33fr) minmax(0, 0.42fr) !important;
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 0.28fr) minmax(0, 0.95fr) !important;
     height: calc(100vh - var(--nav-h) - var(--strip-h) - 2rem) !important;
     min-height: 600px !important;
     align-items: stretch;
@@ -3598,6 +3598,13 @@ button:focus-visible, a:focus-visible {
     min-height: max-content;
   }
 
+  #panelLog .log-table-wrap,
+  #panelLog .log-card-list {
+    min-height: clamp(260px, 30vh, 360px);
+    max-height: none !important;
+    overflow-y: auto;
+  }
+
   #panelConsole {
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -3625,7 +3632,7 @@ button:focus-visible, a:focus-visible {
 
 @media (min-width: 1024px) {
   .dashboard-grid {
-    grid-template-rows: auto minmax(0, 1.15fr) minmax(0, 1.5fr) minmax(0, 0.32fr) minmax(0, 0.4fr) !important;
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 0.26fr) minmax(0, 1fr) !important;
     height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.15rem) !important;
     min-height: 620px !important;
     align-items: stretch;
@@ -3662,6 +3669,13 @@ button:focus-visible, a:focus-visible {
   #panelTelemetry #telemetryContent {
     overflow-y: visible;
     min-height: max-content;
+  }
+
+  #panelLog .log-table-wrap,
+  #panelLog .log-card-list {
+    min-height: clamp(300px, 34vh, 460px);
+    max-height: none !important;
+    overflow-y: auto;
   }
 
   #panelConsole {
