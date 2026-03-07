@@ -18,6 +18,12 @@ const STATE = {
   activeTeleRobot: 'R-01',
   draftCommand: null,
   lastDecision: null,
+  contrastGovernance: true,
+  contrastScenario: 'Unsafe Speed',
+  contrastReplayTimer: null,
+  governanceFeedMode: 'demo',
+  governanceEvents: [],
+  governanceFeedInterval: null,
   auditLog: [],
   commandQueue: [],            // Command queue array
   robots: {},
@@ -140,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showLogin();
   }
   bindLoginForm();
+  bindPasswordToggle();
 });
 
 function deepCopyRobots() {
@@ -242,6 +249,7 @@ function bindLoginForm() {
 function showLogin() {
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('appShell').classList.add('hidden');
+  closeEventsDrawer();
 }
 
 function showApp() {
@@ -272,10 +280,12 @@ function initApp() {
   renderCommandQueue();
   startSimulation();
   startQueueProcessor();
+  startGovernanceEventStream();
 
   bindNavigation();
   bindHamburgerMenu();
   bindStatusStrip();
+  bindContextHelp();
   bindCommandConsole();
   bindManualCommandInput();
   bindPolicyPanel();
@@ -286,6 +296,8 @@ function initApp() {
   bindChartsToggle();
   bindRobotsPage();
   bindLogResizer();
+  bindContrastPage();
+  bindGovernanceEventFeed();
 
   // Clear queue button
   document.getElementById('clearQueueBtn')?.addEventListener('click', () => {
@@ -296,6 +308,7 @@ function initApp() {
 
   const connectAction = () => {
     showToast('Scanning for robots…', 'info');
+    addGovernanceEvent({ severity: 'INFO', category: 'Robot', title: 'Network Scan Initiated', description: 'Searching for registered robots on control network.' });
     closeMobileNav();
     setTimeout(() => {
       STATE.robots['R-01'].connected = true;
@@ -306,6 +319,7 @@ function initApp() {
       renderRobotsPageList();
       saveState();
       showToast('R-01 connected successfully', 'approved');
+      addGovernanceEvent({ severity: 'INFO', category: 'Robot', title: 'R-01 Connected', description: 'Handshake verified and robot available for command dispatch.' });
     }, 1500);
   };
 
@@ -317,6 +331,7 @@ function initApp() {
     STATE.loggedIn = false;
     saveState();
     stopSimulation();
+    stopGovernanceEventStream();
     closeMobileNav();
     showLogin();
   };
@@ -361,6 +376,8 @@ function navigateTo(page) {
   if (page === 'about')    updateAboutPage();
   if (page === 'robots')   renderRobotsPageList();
   if (page === 'protocol') { /* static page, no init needed */ }
+  if (page === 'contrast') renderContrastPage();
+  if (page === 'dashboard') renderGovernanceEventFeed();
 
   const main = document.getElementById('mainContent');
   if (main) main.scrollTop = 0;
@@ -496,10 +513,105 @@ function updateDashboardPulse() {
   };
 
   setText('pulseFleetHealth', `${healthScore}%`);
+  setText('pulseFleetHealthHint', `${connected}/${robots.length} connected · avg battery ${avgBattery}%`);
   setText('pulseConnected', `${connected} / ${robots.length}`);
   setText('pulseAvgBattery', `${avgBattery}%`);
   setText('pulseQueueDepth', `${STATE.commandQueue.length}`);
   setText('pulseBlockedHour', `${blockedRecent}`);
+}
+
+
+function bindContextHelp() {
+  if (bindContextHelp._bound) return;
+  bindContextHelp._bound = true;
+  const triggers = Array.from(document.querySelectorAll('.context-help-btn[data-help-text]'));
+  if (!triggers.length) return;
+
+  let popover = document.getElementById('contextHelpPopover');
+  if (!popover) {
+    popover = document.createElement('div');
+    popover.id = 'contextHelpPopover';
+    popover.className = 'context-help-popover';
+    popover.innerHTML = '<div class="context-help-title" id="contextHelpTitle"></div><div class="context-help-body" id="contextHelpBody"></div>';
+    document.body.appendChild(popover);
+  }
+
+  let activeTrigger = null;
+  const placePopover = trigger => {
+    const rect = trigger.getBoundingClientRect();
+    const width = Math.min(280, window.innerWidth - 16);
+    const left = Math.max(8, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 8));
+    let top = rect.bottom + 8;
+    const estimatedHeight = 84;
+    if (top + estimatedHeight > window.innerHeight - 8) {
+      top = Math.max(8, rect.top - estimatedHeight - 8);
+    }
+    popover.style.width = `${width}px`;
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+  };
+
+  const closeHelp = () => {
+    popover.classList.remove('open');
+    popover.setAttribute('aria-hidden', 'true');
+    if (activeTrigger) activeTrigger.setAttribute('aria-expanded', 'false');
+    activeTrigger = null;
+  };
+
+  const openHelp = trigger => {
+    if (activeTrigger === trigger && popover.classList.contains('open')) {
+      closeHelp();
+      return;
+    }
+    activeTrigger = trigger;
+    document.getElementById('contextHelpTitle').textContent = trigger.dataset.helpTitle || 'Info';
+    document.getElementById('contextHelpBody').textContent = trigger.dataset.helpText || '';
+    placePopover(trigger);
+    popover.classList.add('open');
+    popover.setAttribute('aria-hidden', 'false');
+    trigger.setAttribute('aria-expanded', 'true');
+  };
+
+  triggers.forEach(trigger => {
+    trigger.setAttribute('aria-haspopup', 'dialog');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    trigger.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      openHelp(trigger);
+    });
+
+    trigger.addEventListener('mouseenter', () => {
+      if (window.matchMedia('(hover: hover)').matches) openHelp(trigger);
+    });
+
+    trigger.addEventListener('mouseleave', () => {
+      if (!window.matchMedia('(hover: hover)').matches) return;
+      setTimeout(() => {
+        if (!trigger.matches(':hover') && !popover.matches(':hover')) closeHelp();
+      }, 110);
+    });
+  });
+
+  popover.addEventListener('mouseleave', () => {
+    if (window.matchMedia('(hover: hover)').matches) closeHelp();
+  });
+
+  document.addEventListener('click', e => {
+    if (!popover.classList.contains('open')) return;
+    if (popover.contains(e.target) || (activeTrigger && activeTrigger.contains(e.target))) return;
+    closeHelp();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeHelp();
+  });
+
+  window.addEventListener('resize', () => {
+    if (activeTrigger && popover.classList.contains('open')) placePopover(activeTrigger);
+  });
+  document.getElementById('mainContent')?.addEventListener('scroll', closeHelp, { passive: true });
 }
 
 function bindStatusStrip() {
@@ -508,6 +620,7 @@ function bindStatusStrip() {
     updateStatusStrip();
     saveState();
     showToast(`Simulation Mode ${STATE.simMode ? 'enabled' : 'disabled'}`, 'info');
+    addGovernanceEvent({ severity: 'INFO', category: 'System', title: `Simulation Mode ${STATE.simMode ? 'Enabled' : 'Disabled'}`, description: 'Operator toggled simulation state from status strip.' });
   });
 }
 
@@ -885,6 +998,7 @@ async function sendForValidation() {
 
   if (policyStatus === 'BLOCKED') {
     showBanner('blocked', '<i class="fas fa-ban"></i>', `Blocked — ${blockReasons[0] || 'Policy violation'}`);
+    addGovernanceEvent({ severity: 'WARNING', category: 'Governance', title: 'Policy Block', description: blockReasons[0] || 'Policy validation blocked command.' });
     showToast(`Command blocked: ${blockReasons[0] || 'Policy violation'}`, 'blocked');
     addAuditLogEntry({
       requestId, policyDecisionId,
@@ -910,6 +1024,7 @@ async function sendForValidation() {
 
   if (!safetyResult.passed && STATE.policyMode === 'strict') {
     showBanner('blocked', '<i class="fas fa-ban"></i>', `Safety Envelope blocked — ${safetyResult.reason}`);
+    addGovernanceEvent({ severity: 'CRITICAL', category: 'Safety', title: 'Safety Envelope Block', description: safetyResult.reason });
     showToast(`Safety block: ${safetyResult.reason}`, 'blocked');
     addAuditLogEntry({
       requestId, policyDecisionId,
@@ -938,6 +1053,7 @@ async function sendForValidation() {
   if (!hsResult) {
     const failedRobots = targets.filter(id => STATE.robots[id]?.handshakeStatus !== 'verified').join(', ');
     showBanner('blocked', '<i class="fas fa-handshake-slash"></i>', `Handshake not verified — ${failedRobots}`);
+    addGovernanceEvent({ severity: 'WARNING', category: 'Robot', title: 'Handshake Verification Failed', description: `Unverified robots: ${failedRobots}` });
     showToast(`Handshake failed for: ${failedRobots}`, 'blocked');
     addAuditLogEntry({
       requestId, policyDecisionId,
@@ -1135,6 +1251,7 @@ function executeQueuedCommand(item) {
   }, 200 + Math.random() * 300);
 
   showBanner('approved', '<i class="fas fa-circle-check"></i>', 'Command Executed Successfully');
+  addGovernanceEvent({ severity: 'INFO', category: 'Governance', title: 'Command Executed', description: `${cmd} completed on ${targets.join(', ')}` });
   showToast(`${cmd} → ${targets.join(', ')} executed`, 'approved');
 
   renderRobotList();
@@ -1278,6 +1395,7 @@ function executeCommand(cmd, targets, speed, reqId, polId, rules, overrideStatus
   });
 
   showBanner('approved', '<i class="fas fa-circle-check"></i>', 'Command Executed Successfully');
+  addGovernanceEvent({ severity: 'INFO', category: 'Governance', title: 'Command Executed', description: `${cmd} completed on ${targets.join(', ')}` });
   showToast(`${cmd} → ${targets.join(', ')} executed`, 'approved');
 
   renderRobotList();
@@ -1696,6 +1814,7 @@ function renderRobotsPageList() {
         r.connected = false;
         r.handshakeStatus = 'unverified';
         showToast(`${robot.id} disconnected`, 'info');
+        addGovernanceEvent({ severity: 'CRITICAL', category: 'Robot', title: `${robot.id} Disconnected`, description: 'Robot link manually disconnected by operator.' });
       } else {
         showToast(`Connecting to ${robot.id}…`, 'info');
         setTimeout(() => {
@@ -1704,6 +1823,7 @@ function renderRobotsPageList() {
           r.handshakeStatus = 'verified';
           r.latency = Math.round(Math.random() * 30 + 10);
           showToast(`${robot.id} connected`, 'approved');
+          addGovernanceEvent({ severity: 'INFO', category: 'Robot', title: `${robot.id} Connected`, description: `Round-trip latency ${r.latency}ms.` });
           renderRobotsPageList();
           renderRobotList();
           updateStatusStrip();
@@ -1725,6 +1845,7 @@ function renderRobotsPageList() {
       const hs = await simulateHandshake(r);
       r.latency = hs.latency;
       showToast(`${robot.id} responded in ${hs.latency}ms`, 'approved');
+      addGovernanceEvent({ severity: hs.latency > 120 ? 'WARNING' : 'INFO', category: 'Robot', title: `${robot.id} Ping Response`, description: `Latency measured at ${hs.latency}ms.` });
       renderRobotsPageList();
       saveState();
     });
@@ -2039,6 +2160,15 @@ function addAuditLogEntry(data) {
   };
   STATE.auditLog.unshift(entry);
   if (STATE.auditLog.length > 500) STATE.auditLog = STATE.auditLog.slice(0, 500);
+  addGovernanceEvent({
+    severity: 'INFO',
+    category: 'Audit',
+    title: 'Entry Created',
+    description: `${entry.command} · ${entry.validation} · ${entry.robot}`,
+    relatedAuditId: entry.id,
+    relatedTimeline: entry.validation === 'BLOCKED' ? 'Rule Triggered' : 'Governance Check',
+    relatedAuthorityIndex: entry.validation === 'BLOCKED' ? 2 : 4,
+  });
   return entry;
 }
 
@@ -2086,6 +2216,7 @@ function renderFullAuditLog() {
 function createLogCard(entry) {
   const card = document.createElement('div');
   card.className = 'log-card';
+  card.dataset.auditId = entry.id;
   card.style.minHeight = '48px';
   card.innerHTML = `
     <div class="log-card-left">
@@ -2125,6 +2256,7 @@ function getFilteredLogs(robotFilterId, statusFilterId, timeFilterId, searchId) 
 
 function createLogRow(entry, showRequestId) {
   const tr = document.createElement('tr');
+  tr.dataset.auditId = entry.id;
   const cmdIdShort = entry.commandId ? entry.commandId.slice(0,7) + '…' : '—';
   const hsCell = entry.handshakeVerified === true
     ? '<span class="validation-pill pill-approved" style="font-size:9px;padding:.15rem .4rem"><i class="fas fa-handshake"></i> OK</span>'
@@ -2977,4 +3109,575 @@ function showManualCmdStatus(type, message) {
     : type === 'pending' ? 'fa-spinner fa-spin'
     : 'fa-circle-xmark';
   el.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
+}
+
+
+function bindPasswordToggle() {
+  const toggleBtn = document.getElementById('passwordToggleBtn');
+  const pwInput = document.getElementById('password');
+  const icon = document.getElementById('passwordToggleIcon');
+  if (!toggleBtn || !pwInput || !icon) return;
+
+  toggleBtn.addEventListener('click', () => {
+    const showing = pwInput.type === 'text';
+    pwInput.type = showing ? 'password' : 'text';
+    icon.classList.toggle('fa-eye', showing);
+    icon.classList.toggle('fa-eye-slash', !showing);
+    toggleBtn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    toggleBtn.setAttribute('aria-pressed', String(!showing));
+  });
+}
+
+const CONTRAST_SCENARIOS = {
+  'Unsafe Speed': {
+    standard: ['Received', 'Command mapped to control loop', 'Sent', 'Actuated'],
+    governed: ['Authority check complete', 'Policy validation failed', 'Execution decision: blocked', 'Blocked + logged'],
+    decision: 'BLOCKED',
+    decisionReason: 'Rule R-01 max speed exceeded',
+    operatorStatus: 'Alert',
+    authorityLevel: 'Restricted',
+    commandRestriction: 'Speed-limited',
+    expectedPattern: 'Speed < 60 indoor',
+    currentPattern: 'Speed request 90',
+    deviationAlert: 'Critical',
+    configChange: 'Motor limit override',
+    approvalRequirement: 'Supervisor + policy',
+    approvalResult: 'Denied',
+    faultDetected: 'Overspeed risk',
+    correction: 'Throttle to 55',
+    updateStatus: 'Patch not required',
+    riskLevel: 'Elevated',
+    policyEngine: 'Online',
+    authorityNote: 'Policy Engine BLOCKS command before Robot Execution.',
+    timeline: [
+      { t: '00:00', label: 'Command Issued' },
+      { t: '00:01', label: 'Planner Request' },
+      { t: '00:01', label: 'Governance Check', intervention: true },
+      { t: '00:02', label: 'Rule Triggered', intervention: true },
+      { t: '00:02', label: 'Command Blocked', badge: '⚠ POLICY BLOCK', intervention: true },
+      { t: '00:02', label: 'Audit Logged' },
+    ],
+    badges: ['⚠ POLICY BLOCK']
+  },
+  'Operator Fatigue': {
+    standard: ['Received', 'Planner active', 'Sent', 'Actuated'],
+    governed: ['Authority check complete', 'Policy validation passed', 'Execution decision: safe stop', 'Safe stop + logged'],
+    decision: 'SAFE STOP',
+    decisionReason: 'Operator vigilance threshold failed',
+    operatorStatus: 'Fatigued', authorityLevel: 'Restricted', commandRestriction: 'Manual-only',
+    expectedPattern: 'Stable operator biometrics', currentPattern: 'High fatigue score', deviationAlert: 'Elevated',
+    configChange: 'N/A', approvalRequirement: 'N/A', approvalResult: 'N/A',
+    faultDetected: 'Human-factor risk', correction: 'Require relief operator', updateStatus: 'Pending reassignment',
+    riskLevel: 'Elevated',
+    policyEngine: 'Online',
+    authorityNote: 'Operator state flagged, authority reduced, command restricted to safe stop.',
+    timeline: [
+      { t: '00:00', label: 'Command Issued' },
+      { t: '00:01', label: 'Planner Request' },
+      { t: '00:01', label: 'Governance Check', intervention: true },
+      { t: '00:02', label: 'Rule Triggered', intervention: true },
+      { t: '00:02', label: 'Safe Stop Triggered', badge: '🛑 SAFE STOP', intervention: true },
+      { t: '00:02', label: 'Audit Logged' },
+    ],
+    badges: ['🛑 SAFE STOP']
+  },
+  'Sensor Glitch': {
+    standard: ['Received', 'Planner active', 'Sent', 'Actuated'],
+    governed: ['Authority check complete', 'Policy validation failed', 'Execution decision: blocked', 'Blocked + logged'],
+    decision: 'BLOCKED', decisionReason: 'Sensor confidence dropped below baseline',
+    operatorStatus: 'Normal', authorityLevel: 'Operator', commandRestriction: 'No autonomy',
+    expectedPattern: 'Consistent IMU + lidar', currentPattern: 'Intermittent sensor spikes', deviationAlert: 'Elevated',
+    configChange: 'Sensor recalibration', approvalRequirement: 'Policy check', approvalResult: 'Approved',
+    faultDetected: 'IMU jitter', correction: 'Switch to fallback sensor fusion', updateStatus: 'Applied',
+    riskLevel: 'Critical',
+    policyEngine: 'Online',
+    authorityNote: 'Anomaly monitor intervenes; unsafe execution path is blocked.',
+    timeline: [
+      { t: '00:00', label: 'Command Issued' },
+      { t: '00:01', label: 'Planner Request' },
+      { t: '00:01', label: 'Governance Check', intervention: true },
+      { t: '00:02', label: 'Rule Triggered', badge: '🔍 ANOMALY DETECTED', intervention: true },
+      { t: '00:02', label: 'Command Blocked', badge: '⚠ POLICY BLOCK', intervention: true },
+      { t: '00:02', label: 'Audit Logged' },
+    ],
+    badges: ['🔍 ANOMALY DETECTED', '⚠ POLICY BLOCK']
+  },
+  'Fragile Object': {
+    standard: ['Received', 'Planner active', 'Sent', 'Actuated'],
+    governed: ['Authority check complete', 'Policy validation passed', 'Execution decision: approved', 'Approved + logged'],
+    decision: 'APPROVED', decisionReason: 'Precision mode constraints satisfied',
+    operatorStatus: 'Normal', authorityLevel: 'Operator', commandRestriction: 'Low-force only',
+    expectedPattern: 'Soft trajectory profile', currentPattern: 'Within tolerance', deviationAlert: 'Nominal',
+    configChange: 'Grip-force profile', approvalRequirement: 'Dual approval', approvalResult: 'Approved',
+    faultDetected: 'No fault', correction: 'Maintain precision profile', updateStatus: 'Stable',
+    riskLevel: 'Nominal',
+    policyEngine: 'Online',
+    authorityNote: 'Mission policy constrains motion profile and allows safe execution.',
+    timeline: [
+      { t: '00:00', label: 'Command Issued' },
+      { t: '00:01', label: 'Planner Request' },
+      { t: '00:01', label: 'Governance Check', intervention: true },
+      { t: '00:02', label: 'Rule Triggered', intervention: true },
+      { t: '00:02', label: 'Command Approved' },
+      { t: '00:02', label: 'Audit Logged' },
+    ],
+    badges: []
+  },
+  'Config Change': {
+    standard: ['Received', 'Planner active', 'Sent', 'Actuated'],
+    governed: ['Authority check complete', 'Policy validation failed', 'Execution decision: blocked', 'Logged'],
+    decision: 'BLOCKED', decisionReason: 'Unapproved configuration mutation',
+    operatorStatus: 'Normal', authorityLevel: 'Supervisor', commandRestriction: 'No config writes',
+    expectedPattern: 'Read-only operation', currentPattern: 'Config write request', deviationAlert: 'Elevated',
+    configChange: 'Navigation stack edit', approvalRequirement: 'Supervisor sign-off', approvalResult: 'Rejected',
+    faultDetected: 'Config drift attempt', correction: 'Rollback + lock config', updateStatus: 'Locked',
+    riskLevel: 'Elevated',
+    policyEngine: 'Online',
+    authorityNote: 'Policy requires supervisor authority; change denied at policy checkpoint.',
+    timeline: [
+      { t: '00:00', label: 'Command Issued' },
+      { t: '00:01', label: 'Planner Request' },
+      { t: '00:01', label: 'Governance Check', intervention: true },
+      { t: '00:02', label: 'Rule Triggered', intervention: true },
+      { t: '00:02', label: 'Change Denied', badge: '⚠ POLICY BLOCK', intervention: true },
+      { t: '00:02', label: 'Audit Logged' },
+    ],
+    badges: ['⚠ POLICY BLOCK']
+  },
+  'Diagnostic Fault': {
+    standard: ['Received', 'Planner active', 'Sent', 'Actuation fault'],
+    governed: ['Authority check complete', 'Policy validation passed', 'Execution decision: safe stop', 'Logged + repair suggested'],
+    decision: 'SAFE STOP', decisionReason: 'Actuator fault confidence high',
+    operatorStatus: 'Normal', authorityLevel: 'Restricted', commandRestriction: 'Diagnostics only',
+    expectedPattern: 'Nominal motor current', currentPattern: 'Current spike burst', deviationAlert: 'Critical',
+    configChange: 'Firmware patch', approvalRequirement: 'Maintenance approval', approvalResult: 'Approved',
+    faultDetected: 'Motor controller fault', correction: 'Load fallback profile + reboot', updateStatus: 'In progress',
+    riskLevel: 'Critical',
+    policyEngine: 'Degraded',
+    authorityNote: 'Safety envelope overrides command and moves system to safe stop path.',
+    timeline: [
+      { t: '00:00', label: 'Command Issued' },
+      { t: '00:01', label: 'Planner Request' },
+      { t: '00:01', label: 'Governance Check', intervention: true },
+      { t: '00:02', label: 'Rule Triggered', badge: '🔍 ANOMALY DETECTED', intervention: true },
+      { t: '00:02', label: 'Safe Stop Triggered', badge: '🛑 SAFE STOP', intervention: true },
+      { t: '00:02', label: 'Audit Logged' },
+    ],
+    badges: ['🔍 ANOMALY DETECTED', '🛑 SAFE STOP']
+  },
+};
+
+function bindContrastPage() {
+  const switcher = document.getElementById('contrastScenarioSwitcher');
+  if (switcher) {
+    switcher.querySelectorAll('.contrast-segment-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        STATE.contrastScenario = btn.dataset.scenario;
+        renderContrastPage();
+      });
+    });
+  }
+
+  document.getElementById('governanceOffBtn')?.addEventListener('click', () => {
+    STATE.contrastGovernance = false;
+    renderContrastPage();
+  });
+  document.getElementById('governanceOnBtn')?.addEventListener('click', () => {
+    STATE.contrastGovernance = true;
+    renderContrastPage();
+  });
+
+  document.getElementById('replayScenarioBtn')?.addEventListener('click', replayContrastScenario);
+  renderContrastPage();
+}
+
+function renderContrastPage() {
+  const scenario = CONTRAST_SCENARIOS[STATE.contrastScenario] || CONTRAST_SCENARIOS['Unsafe Speed'];
+  const effectiveDecision = STATE.contrastGovernance ? scenario.decision : 'APPROVED';
+  const effectiveReason = STATE.contrastGovernance ? scenario.decisionReason : 'Direct execution path active';
+
+  document.querySelectorAll('.contrast-segment-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.scenario === STATE.contrastScenario);
+  });
+  document.getElementById('governanceOffBtn')?.classList.toggle('active', !STATE.contrastGovernance);
+  document.getElementById('governanceOnBtn')?.classList.toggle('active', STATE.contrastGovernance);
+
+  const standardRows = [
+    ['Command Received', scenario.standard[0]],
+    ['Planner Active', scenario.standard[1]],
+    ['Execution Sent', scenario.standard[2]],
+    ['Result', scenario.standard[3]],
+  ];
+  const governedRows = [
+    ['Command Received', 'Queued for governance'],
+    ['Pipeline State', scenario.governed[1]],
+    ['Decision', effectiveDecision],
+    ['Audit', scenario.governed[3]],
+  ];
+  renderStatusRows('standardStatusList', standardRows);
+  renderStatusRows('governedStatusList', governedRows);
+
+  renderInfoRows('decisionTraceability', [
+    ['command ID', generateId().slice(0, 8)],
+    ['rule triggered', effectiveReason],
+    ['decision', effectiveDecision],
+    ['timestamp', new Date().toLocaleTimeString()],
+  ]);
+  renderInfoRows('operatorStateCard', [
+    ['operator status', scenario.operatorStatus],
+    ['authority level', STATE.contrastGovernance ? scenario.authorityLevel : 'Operator'],
+    ['command restriction', STATE.contrastGovernance ? scenario.commandRestriction : 'None'],
+  ]);
+  renderInfoRows('anomalyDetectionCard', [
+    ['expected pattern', scenario.expectedPattern],
+    ['current pattern', scenario.currentPattern],
+    ['deviation alert', STATE.contrastGovernance ? scenario.deviationAlert : 'Bypassed'],
+  ]);
+  renderInfoRows('configurationGovernanceCard', [
+    ['attempted config change', scenario.configChange],
+    ['approval requirement', STATE.contrastGovernance ? scenario.approvalRequirement : 'Not required'],
+    ['approval result', STATE.contrastGovernance ? scenario.approvalResult : 'Auto-applied'],
+  ]);
+  renderInfoRows('diagnosticRepairCard', [
+    ['fault detected', scenario.faultDetected],
+    ['suggested correction', scenario.correction],
+    ['system update status', scenario.updateStatus],
+  ]);
+
+  renderInterventionBadges(scenario);
+  renderDecisionTimeline(scenario, null);
+  renderSystemBanner(scenario);
+  renderAuthorityChain(scenario, null);
+}
+
+function renderStatusRows(containerId, rows) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = rows.map(([k, v]) => `<div class="contrast-status-row"><span>${k}</span><span>${v}</span></div>`).join('');
+}
+
+function renderInfoRows(containerId, rows) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = rows.map(([k, v]) => `<div class="contrast-info-row"><span>${k}</span><span>${v}</span></div>`).join('');
+}
+
+function renderInterventionBadges(scenario) {
+  const el = document.getElementById('contrastInterventionBadges');
+  if (!el) return;
+  const badges = STATE.contrastGovernance ? scenario.badges : [];
+  if (!badges.length) {
+    el.innerHTML = '<span class="policy-status-badge badge-approved">NO INTERVENTION</span>';
+    return;
+  }
+  el.innerHTML = badges.map(b => `<span class="contrast-intervention-badge">${b}</span>`).join('');
+}
+
+function renderDecisionTimeline(scenario, progress) {
+  const el = document.getElementById('contrastTimeline');
+  if (!el) return;
+  const max = progress === null ? scenario.timeline.length - 1 : progress;
+  el.innerHTML = scenario.timeline.map((item, idx) => {
+    const active = idx <= max ? ' active' : '';
+    const intervention = item.intervention ? ' intervention' : '';
+    const badge = item.badge ? `<span class="contrast-timeline-badge">${item.badge}</span>` : '';
+    return `<div class="contrast-timeline-event${active}${intervention}"><div class="contrast-timeline-time">${item.t}</div><div class="contrast-timeline-label">${item.label}</div>${badge}</div>`;
+  }).join('');
+}
+
+function renderSystemBanner(scenario) {
+  const mode = STATE.contrastGovernance ? 'Governed' : 'Direct';
+  const authority = STATE.contrastGovernance ? scenario.authorityLevel : 'Operator';
+  const risk = STATE.contrastGovernance ? scenario.riskLevel : 'Nominal';
+  const policyEngine = STATE.contrastGovernance ? scenario.policyEngine : 'Bypassed';
+
+  const modeEl = document.getElementById('contrastExecMode');
+  const authEl = document.getElementById('contrastAuthority');
+  const riskEl = document.getElementById('contrastRiskLevel');
+  const policyEl = document.getElementById('contrastPolicyEngine');
+  if (!modeEl || !authEl || !riskEl || !policyEl) return;
+
+  modeEl.textContent = mode;
+  authEl.textContent = authority;
+  riskEl.textContent = risk;
+  policyEl.textContent = policyEngine;
+
+  riskEl.classList.remove('is-nominal', 'is-elevated', 'is-critical');
+  riskEl.classList.add(risk === 'Critical' ? 'is-critical' : risk === 'Elevated' ? 'is-elevated' : 'is-nominal');
+}
+
+function renderAuthorityChain(scenario, highlightIndex) {
+  const steps = [...document.querySelectorAll('.contrast-authority-step')];
+  if (!steps.length) return;
+  steps.forEach((step, i) => {
+    step.classList.toggle('active', highlightIndex === i);
+    step.classList.toggle('done', highlightIndex !== null && i < highlightIndex);
+  });
+  const note = document.getElementById('contrastAuthorityNote');
+  if (note) note.textContent = STATE.contrastGovernance ? scenario.authorityNote : 'Direct path: operator command passes straight to robot execution.';
+}
+
+function replayContrastScenario() {
+  if (STATE.contrastReplayTimer) {
+    clearTimeout(STATE.contrastReplayTimer);
+    STATE.contrastReplayTimer = null;
+  }
+
+  const scenario = CONTRAST_SCENARIOS[STATE.contrastScenario] || CONTRAST_SCENARIOS['Unsafe Speed'];
+  const standardSteps = [...document.querySelectorAll('#standardPipeline .contrast-step')];
+  const governedSteps = [...document.querySelectorAll('#governedPipeline .contrast-step')];
+  [...standardSteps, ...governedSteps].forEach(step => step.classList.remove('active', 'done'));
+
+  const setStepState = (steps, activeIndex) => {
+    steps.forEach((step, i) => {
+      step.classList.toggle('active', i === activeIndex);
+      step.classList.toggle('done', i < activeIndex);
+    });
+  };
+
+  renderDecisionTimeline(scenario, -1);
+  renderAuthorityChain(scenario, 0);
+  showToast('Step 1: Operator Command received', 'info');
+  addGovernanceEvent({ severity: 'INFO', category: 'Governance', title: 'Scenario Replay Triggered', description: `${STATE.contrastScenario} replay initiated.`, relatedTimeline: 'Command Issued', relatedAuthorityIndex: 0 });
+
+  // ~2s total timeline
+  setTimeout(() => {
+    let i = 0;
+    const intv = setInterval(() => {
+      setStepState(standardSteps, i);
+      renderDecisionTimeline(scenario, Math.min(i + 1, scenario.timeline.length - 1));
+      i += 1;
+      if (i >= standardSteps.length) clearInterval(intv);
+    }, 140);
+  }, 120);
+
+  setTimeout(() => {
+    showToast('Step 3: Governance checks activating', 'info');
+    addGovernanceEvent({ severity: 'WARNING', category: 'Governance', title: 'Governance Check', description: 'Policy and safety checkpoints engaged.', relatedTimeline: 'Governance Check', relatedAuthorityIndex: 2 });
+    renderAuthorityChain(scenario, 1);
+    if (STATE.contrastGovernance) {
+      let g = 1;
+      const intv = setInterval(() => {
+        setStepState(governedSteps, g);
+        renderDecisionTimeline(scenario, Math.min(g + 2, scenario.timeline.length - 1));
+        if (g === 2) renderAuthorityChain(scenario, 1);
+        if (g === 3) renderAuthorityChain(scenario, 2);
+        if (g === 4) renderAuthorityChain(scenario, 2);
+        g += 1;
+        if (g >= governedSteps.length) clearInterval(intv);
+      }, 120);
+    } else {
+      setStepState(governedSteps, governedSteps.length - 1);
+    }
+  }, 850);
+
+  STATE.contrastReplayTimer = setTimeout(() => {
+    const decision = STATE.contrastGovernance ? scenario.decision : 'APPROVED';
+    const toastType = decision === 'APPROVED' ? 'approved' : decision === 'SAFE STOP' ? 'warning' : 'blocked';
+    showToast(`Step 4: ${decision} · Audit logged`, toastType);
+    addGovernanceEvent({ severity: decision === 'APPROVED' ? 'INFO' : decision === 'SAFE STOP' ? 'CRITICAL' : 'WARNING', category: decision === 'SAFE STOP' ? 'Safety' : 'Governance', title: `Execution ${decision}`, description: `${STATE.contrastScenario} completed with ${decision}.`, relatedTimeline: 'Rule Triggered', relatedAuthorityIndex: decision === 'APPROVED' ? 4 : 2 });
+    renderDecisionTimeline(scenario, scenario.timeline.length - 1);
+    renderAuthorityChain(scenario, decision === 'APPROVED' ? 4 : 2);
+    renderSystemBanner(scenario);
+    renderInterventionBadges(scenario);
+  }, 2100);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   GOVERNANCE EVENT FEED
+═══════════════════════════════════════════════════════════════ */
+const GOVERNANCE_EVENT_TEMPLATES = (() => {
+  const robots = ['R-01', 'R-02', 'R-03'];
+  const templates = [];
+
+  const push = (severity, category, title, description) => templates.push({ severity, category, title, description });
+
+  robots.forEach(id => {
+    push('INFO', 'Robot', `${id} Connected`, `${id} accepted control handshake and heartbeat.`);
+    push('WARNING', 'Robot', `${id} Link Degraded`, `${id} latency increased above nominal control threshold.`);
+    push('CRITICAL', 'Robot', `${id} Disconnected`, `${id} heartbeat timeout detected by control station.`);
+  });
+
+  [45, 52, 58, 61, 67, 72, 79, 84, 91].forEach(speed => {
+    push(speed > 80 ? 'CRITICAL' : 'WARNING', 'Governance', 'Policy Check Triggered', `Requested speed ${speed} cm/s evaluated against mission constraints.`);
+  });
+
+  [9, 12, 16, 22, 28, 34, 41, 48, 56, 63].forEach(battery => {
+    push(battery < 15 ? 'CRITICAL' : 'WARNING', 'Safety', 'Battery Threshold Alert', `Battery at ${battery}% requires restricted operation profile.`);
+  });
+
+  [
+    ['INFO', 'System', 'Policy Engine Online', 'Governance core responding within nominal latency window.'],
+    ['WARNING', 'System', 'Policy Engine Degraded', 'Validation latency elevated, monitoring active.'],
+    ['CRITICAL', 'System', 'Policy Engine Offline', 'Fallback safety interlocks active until recovery.'],
+    ['INFO', 'Audit', 'Entry Created', 'Governance decision persisted to audit ledger.'],
+    ['WARNING', 'Authority', 'Authority Restricted', 'Operator authority reduced by state guardrails.'],
+    ['CRITICAL', 'Safety', 'Safe Stop Triggered', 'Command stream halted by safety envelope.'],
+    ['INFO', 'Governance', 'Command Approved', 'Policy and safety checks passed for dispatch.'],
+    ['WARNING', 'Governance', 'Policy Block', 'Command denied due to active mission policy.'],
+    ['INFO', 'System', 'Simulation Feed Active', 'Governance Event Feed emitting structured demo events.'],
+    ['INFO', 'System', 'Live Feed Active', 'Governance Event Feed switched to live operational signals.'],
+  ].forEach(([sev, cat, title, desc]) => push(sev, cat, title, desc));
+
+  // Build up to ~70 structured templates
+  while (templates.length < 72) {
+    const r = robots[templates.length % robots.length];
+    const offset = templates.length % 7;
+    push('INFO', 'Governance', `Policy Validation Cycle ${templates.length - 35}`, `${r} command validation pass completed (window ${offset + 1}).`);
+  }
+
+  return templates;
+})();
+
+function bindGovernanceEventFeed() {
+  document.getElementById('feedModeDemoBtn')?.addEventListener('click', () => setGovernanceFeedMode('demo'));
+  document.getElementById('feedModeLiveBtn')?.addEventListener('click', () => setGovernanceFeedMode('live'));
+  document.getElementById('feedModeDemoBtnMobile')?.addEventListener('click', () => setGovernanceFeedMode('demo'));
+  document.getElementById('feedModeLiveBtnMobile')?.addEventListener('click', () => setGovernanceFeedMode('live'));
+
+  document.getElementById('eventsDrawerBtn')?.addEventListener('click', () => openEventsDrawer());
+  document.getElementById('closeEventsDrawerBtn')?.addEventListener('click', () => closeEventsDrawer());
+  document.getElementById('eventsDrawerOverlay')?.addEventListener('click', () => closeEventsDrawer());
+
+  renderGovernanceEventFeed();
+}
+
+function setGovernanceFeedMode(mode) {
+  STATE.governanceFeedMode = mode;
+  document.getElementById('feedModeDemoBtn')?.classList.toggle('active', mode === 'demo');
+  document.getElementById('feedModeLiveBtn')?.classList.toggle('active', mode === 'live');
+  document.getElementById('feedModeDemoBtnMobile')?.classList.toggle('active', mode === 'demo');
+  document.getElementById('feedModeLiveBtnMobile')?.classList.toggle('active', mode === 'live');
+
+  addGovernanceEvent({
+    severity: 'INFO',
+    category: 'System',
+    title: mode === 'demo' ? 'Demo Feed Enabled' : 'Live Feed Enabled',
+    description: mode === 'demo' ? 'Simulation stream active (2–4s structured cadence).' : 'Only real operational events are displayed.',
+  });
+
+  startGovernanceEventStream();
+  renderGovernanceEventFeed();
+}
+
+function startGovernanceEventStream() {
+  stopGovernanceEventStream();
+  if (STATE.governanceFeedMode !== 'demo') return;
+
+  const tick = () => {
+    if (STATE.governanceFeedMode !== 'demo') return;
+    const tpl = GOVERNANCE_EVENT_TEMPLATES[Math.floor(Math.random() * GOVERNANCE_EVENT_TEMPLATES.length)];
+    addGovernanceEvent({ ...tpl });
+    const delay = 2000 + Math.floor(Math.random() * 2000);
+    STATE.governanceFeedInterval = setTimeout(tick, delay);
+  };
+
+  STATE.governanceFeedInterval = setTimeout(tick, 1200);
+}
+
+function stopGovernanceEventStream() {
+  if (STATE.governanceFeedInterval) {
+    clearTimeout(STATE.governanceFeedInterval);
+    STATE.governanceFeedInterval = null;
+  }
+}
+
+function addGovernanceEvent(evt) {
+  const now = new Date();
+  const event = {
+    id: `GE-${now.getTime()}-${Math.floor(Math.random() * 9999)}`,
+    timestamp: now.getTime(),
+    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    severity: evt.severity || 'INFO',
+    category: evt.category || 'System',
+    title: evt.title || 'Operational Event',
+    description: evt.description || '',
+    relatedTimeline: evt.relatedTimeline || null,
+    relatedAuthorityIndex: evt.relatedAuthorityIndex ?? null,
+    relatedAuditId: evt.relatedAuditId || null,
+  };
+
+  STATE.governanceEvents.unshift(event);
+  if (STATE.governanceEvents.length > 50) STATE.governanceEvents = STATE.governanceEvents.slice(0, 50);
+  renderGovernanceEventFeed(event.id);
+}
+
+function renderGovernanceEventFeed(newId = null) {
+  const desktop = document.getElementById('governanceEventFeedList');
+  const mobile = document.getElementById('governanceEventFeedListMobile');
+  const count = document.getElementById('eventsCountBadge');
+  if (count) count.textContent = String(Math.min(99, STATE.governanceEvents.length));
+
+  const renderInto = (el) => {
+    if (!el) return;
+    if (!STATE.governanceEvents.length) {
+      el.innerHTML = '<div class="event-feed-empty">No operational events yet.</div>';
+      return;
+    }
+    el.innerHTML = '';
+    STATE.governanceEvents.forEach(event => {
+      const item = document.createElement('div');
+      const sev = event.severity.toLowerCase();
+      const icon = event.severity === 'CRITICAL' ? '🛑' : event.severity === 'WARNING' ? '⚠' : 'ℹ';
+      item.className = `event-feed-item ${sev}${newId === event.id ? ' event-new' : ''}`;
+      item.dataset.eventId = event.id;
+      item.innerHTML = `
+        <div class="event-feed-meta">
+          <span class="event-feed-time">${event.time}</span>
+          <span class="event-feed-severity ${sev}">${icon}</span>
+          <span class="event-feed-category">${event.category}</span>
+        </div>
+        <div class="event-feed-title">${event.title}</div>
+        <div class="event-feed-desc">${event.description}</div>
+      `;
+      item.addEventListener('click', () => handleGovernanceEventClick(event));
+      el.appendChild(item);
+    });
+  };
+
+  renderInto(desktop);
+  renderInto(mobile);
+}
+
+function handleGovernanceEventClick(event) {
+  if (event.relatedTimeline) {
+    document.querySelectorAll('#contrastTimeline .contrast-timeline-event').forEach(node => {
+      const label = node.querySelector('.contrast-timeline-label')?.textContent || '';
+      node.classList.toggle('feed-focus', label.includes(event.relatedTimeline));
+    });
+  }
+  if (event.relatedAuthorityIndex !== null && event.relatedAuthorityIndex !== undefined) {
+    document.querySelectorAll('.contrast-authority-step').forEach((step, i) => {
+      step.classList.toggle('feed-focus', i === event.relatedAuthorityIndex);
+    });
+  }
+
+  navigateTo('dashboard');
+  setTimeout(() => {
+    const panel = document.getElementById('panelLog');
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    if (event.relatedAuditId) {
+      const target = document.querySelector(`[data-audit-id="${event.relatedAuditId}"]`);
+      if (target) {
+        target.classList.add('event-focus');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => target.classList.remove('event-focus'), 1800);
+      }
+    }
+  }, 120);
+
+  closeEventsDrawer();
+}
+
+function openEventsDrawer() {
+  if (window.innerWidth >= 768) return;
+  document.getElementById('eventsDrawerOverlay')?.classList.add('open');
+  document.getElementById('eventsDrawer')?.classList.add('open');
+}
+
+function closeEventsDrawer() {
+  document.getElementById('eventsDrawerOverlay')?.classList.remove('open');
+  document.getElementById('eventsDrawer')?.classList.remove('open');
 }
