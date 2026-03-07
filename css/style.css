@@ -3559,22 +3559,26 @@ button:focus-visible, a:focus-visible {
 ═══════════════════════════════════ */
 @media (min-width: 768px) and (max-width: 1023px) {
   .dashboard-grid {
-    grid-template-rows: auto auto auto auto auto !important;
-    height: auto !important;
-    min-height: 0 !important;
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr) auto auto !important;
+    height: calc(100vh - var(--nav-h) - var(--strip-h) - 2rem) !important;
+    min-height: 640px !important;
     align-items: stretch;
   }
 
   .panel-fleet,
-  .panel-console {
-    align-self: stretch;
+  .panel-console,
+  .panel-policy,
+  .panel-telemetry,
+  .panel-queue,
+  .panel-log,
+  .panel-event-feed {
     min-height: 0;
   }
 
   .panel-event-feed {
     align-self: stretch;
     height: 100%;
-    max-height: none;
+    max-height: 100%;
     overflow: hidden;
   }
   .panel-event-feed .event-feed-list {
@@ -3587,22 +3591,26 @@ button:focus-visible, a:focus-visible {
 
 @media (min-width: 1024px) {
   .dashboard-grid {
-    grid-template-rows: auto auto auto auto auto !important;
-    height: auto !important;
-    min-height: 0 !important;
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr) auto auto !important;
+    height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.15rem) !important;
+    min-height: 700px !important;
     align-items: stretch;
   }
 
   .panel-fleet,
-  .panel-console {
-    align-self: stretch;
+  .panel-console,
+  .panel-policy,
+  .panel-telemetry,
+  .panel-queue,
+  .panel-log,
+  .panel-event-feed {
     min-height: 0;
   }
 
   .panel-event-feed {
     align-self: stretch;
     height: 100%;
-    max-height: none;
+    max-height: 100%;
     overflow: hidden;
   }
   .panel-event-feed .event-feed-list {
