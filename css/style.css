@@ -3631,12 +3631,14 @@ button:focus-visible, a:focus-visible {
 #panelEventFeed .event-feed-title,
 #panelEventFeed .event-feed-desc {
   width: min(100%, 560px);
+  margin-left: auto;
+  margin-right: auto;
 }
 #panelEventFeed .event-feed-meta {
-  display: grid;
-  grid-template-columns: max-content 1.15rem minmax(0, 1fr);
+  display: flex;
   align-items: center;
-  column-gap: 0.48rem;
+  justify-content: center;
+  gap: 0.48rem;
   margin-bottom: 0.24rem;
 }
 #panelEventFeed .event-feed-time {
@@ -3657,12 +3659,12 @@ button:focus-visible, a:focus-visible {
 #panelEventFeed .event-feed-title {
   margin-top: 0.02rem;
   line-height: 1.3;
-  text-align: left;
+  text-align: center;
 }
 #panelEventFeed .event-feed-desc {
   margin-top: 0.3rem;
   line-height: 1.34;
-  text-align: left;
+  text-align: center;
 }
 
 .events-drawer .event-feed-list {
