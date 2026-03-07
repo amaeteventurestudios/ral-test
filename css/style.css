@@ -3675,7 +3675,7 @@ button:focus-visible, a:focus-visible {
   }
 
   .panel-telemetry {
-    min-height: 340px;
+    min-height: 420px;
   }
 
   .panel-fleet .robot-list,
