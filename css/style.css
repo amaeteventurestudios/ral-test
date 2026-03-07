@@ -3415,371 +3415,304 @@ button:focus-visible, a:focus-visible {
   background: rgba(233,103,35,0.08);
 }
 
-/* Dashboard placement for feed */
+/* ═══════════════════════════════════════════════════════════════════
+   DASHBOARD — RESPONSIVE LAYOUT SYSTEM
+   Single authoritative section. Replaces all previous overrides.
+
+   Layout model:
+     • Mobile (<768px):  single-column stack, panels scroll freely
+     • Tablet (768–1199): 3-col grid, free height, page scrolls
+     • Desktop (≥1200px): 4-col grid, viewport-locked, panels contain
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── 0. Mobile: Event Feed hidden (accessible via drawer) ── */
 @media (max-width: 767px) {
   .panel-event-feed { display: none !important; }
-  #eventsDrawerBtn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
+  #eventsDrawerBtn  { display: inline-flex; align-items: center; gap: 0.35rem; }
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
+/* ── 1. Tablet (768–1199px): 3-col, free height, page scrolls ── */
+@media (min-width: 768px) and (max-width: 1199px) {
   .panel-event-feed { display: flex; }
-  .dashboard-grid {
-    grid-template-columns: minmax(210px, 220px) minmax(0, 1fr) minmax(240px, 280px) !important;
-    grid-template-rows: auto auto auto auto auto !important;
-  }
-  .dashboard-pulse { grid-column: 1 / 4 !important; }
-  .panel-fleet     { grid-column: 1; grid-row: 2 / 4; }
-  .panel-console   { grid-column: 2; grid-row: 2; }
-  .panel-policy    { grid-column: 1; grid-row: 4; }
-  .panel-telemetry { grid-column: 2; grid-row: 3; }
-  .panel-queue     { grid-column: 1 / 3; grid-row: 4; }
-  .panel-log       { grid-column: 1 / 3; grid-row: 5; }
-  .panel-event-feed{ grid-column: 3; grid-row: 2 / 6; min-height: 0; }
-  .event-feed-list { max-height: none; }
-}
 
-@media (min-width: 1024px) {
-  .panel-event-feed { display: flex; }
   .dashboard-grid {
-    grid-template-columns: 240px minmax(0, 1fr) 300px minmax(300px, 340px) !important;
-    grid-template-rows: auto 1fr 1fr auto auto !important;
-  }
-  .dashboard-pulse {
-    grid-column: 1 / 5 !important;
-    grid-template-columns: 240px minmax(0, 0.5fr) minmax(0, 0.5fr) 300px minmax(300px, 340px);
-    gap: 0.6rem;
-  }
-  .dashboard-pulse .pulse-item:nth-child(1) { grid-column: 1; }
-  .dashboard-pulse .pulse-item:nth-child(2) { grid-column: 2; }
-  .dashboard-pulse .pulse-item:nth-child(3) { grid-column: 3; }
-  .dashboard-pulse .pulse-item:nth-child(4) { grid-column: 4; }
-  .dashboard-pulse .pulse-item:nth-child(5) { grid-column: 5; }
-  .panel-fleet     { grid-column: 1; grid-row: 2 / 4; }
-  .panel-console   { grid-column: 2; grid-row: 2 / 4; }
-  .panel-policy    { grid-column: 3; grid-row: 2; }
-  .panel-telemetry { grid-column: 3; grid-row: 3; }
-  .panel-queue     { grid-column: 1 / 4; grid-row: 4; }
-  .panel-log       { grid-column: 1 / 4; grid-row: 5; }
-  .panel-event-feed{ grid-column: 4; grid-row: 2 / 6; min-height: 0; }
-}
-
-@media (min-width: 1440px) {
-  .dashboard-grid {
-    grid-template-columns: 260px minmax(0, 1fr) 320px minmax(320px, 340px) !important;
-  }
-  .dashboard-pulse {
-    grid-template-columns: 260px minmax(0, 0.5fr) minmax(0, 0.5fr) 320px minmax(320px, 340px);
-  }
-}
-
-
-/* ═══════════════════════════════════
-   DASHBOARD FULL-WIDTH LAYOUT REFINEMENT
-   (non-breaking overrides)
-═══════════════════════════════════ */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .dashboard-grid {
-    width: 100%;
-    max-width: none !important;
-    margin: 0 !important;
-    grid-template-columns: minmax(220px, 0.95fr) minmax(420px, 1.55fr) minmax(250px, 1.05fr) !important;
-    grid-template-rows: auto auto auto auto auto !important;
+    display: grid;
+    grid-template-columns: minmax(200px, 220px) minmax(0, 1fr) minmax(220px, 260px) !important;
+    grid-template-rows: auto auto auto auto auto auto !important;
     height: auto !important;
-    min-height: 0 !important;
+    min-height: unset !important;
+    max-height: none !important;
+    gap: 0.75rem;
     align-items: start;
+    overflow: visible;
   }
-  .dashboard-pulse {
-    grid-column: 1 / 4 !important;
-    grid-template-columns: minmax(220px, 0.95fr) minmax(210px, 0.75fr) minmax(210px, 0.75fr) minmax(250px, 1.05fr) minmax(250px, 1.05fr);
-  }
-  .panel-queue,
-  .panel-log,
-  .panel-telemetry,
-  .panel-policy,
+
+  .dashboard-pulse     { grid-column: 1 / 4 !important; grid-row: 1;
+                         grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .panel-fleet         { grid-column: 1; grid-row: 2 / 4; }
+  .panel-console       { grid-column: 2; grid-row: 2; }
+  .panel-policy        { grid-column: 1; grid-row: 4; }
+  .panel-telemetry     { grid-column: 2; grid-row: 3; }
+  .panel-queue         { grid-column: 1 / 3; grid-row: 5; }
+  .panel-log           { grid-column: 1 / 3; grid-row: 6; }
+  .panel-event-feed    { grid-column: 3; grid-row: 2 / 7; min-height: 0; }
+
+  /* All panels: natural height, no viewport clamping */
   .panel-fleet,
   .panel-console,
-  .panel-event-feed {
+  .panel-policy,
+  .panel-telemetry,
+  .panel-queue,
+  .panel-log {
+    height: auto;
     min-height: 0;
     max-height: none;
   }
-  .queue-list { max-height: 120px; overflow-y: auto; padding: 0.25rem 0.6rem 0.45rem; }
-  .chart-wrap { height: 84px; }
+
+  /* Event Feed: fixed shell, internal scroll */
+  .panel-event-feed {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: auto;
+    min-height: 400px;
+    max-height: none;
+    align-self: stretch;
+  }
+  .panel-event-feed .event-feed-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* Robot list: moderate fixed height so fleet panel doesn't grow unbounded */
+  #panelFleet .robot-list    { max-height: 320px; overflow-y: auto; }
+  #panelConsole              { overflow-y: auto; max-height: 520px; }
+  .log-table-wrap            { max-height: 260px; overflow-y: auto; }
+  .queue-list                { max-height: 100px; overflow-y: auto; }
+
+  /* Charts always visible */
+  .tele-charts.collapsed     { display: flex; }
+  .charts-toggle-btn         { display: none; }
+  .chart-wrap                { height: 72px; }
 }
 
-@media (min-width: 1024px) {
+/* ── 2. Desktop (≥1200px): 4-col grid ── */
+@media (min-width: 1200px) {
+  .panel-event-feed { display: flex; }
+
+  /* ── Layout model ──
+     mainContent scrolls vertically.
+     The dashboard grid is content-driven: rows size to their content.
+     Fleet + Console span the upper region (Policy + Telemetry rows).
+     Queue is a compact strip below. Log and Event Feed have bounded height.
+     No panel is clipped; no viewport-height locking needed.
+  ─────────────────────────────────────────────────────────────────── */
+  #mainContent {
+    display: block;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0.7rem 0.9rem;
+    /* Reset any flex chain from previous attempts */
+    flex: 1;
+  }
+
+  /* Dashboard page: block layout, content-driven height */
+  #pageDashboard.page.active {
+    display: block;
+    min-height: unset;
+    overflow: visible;
+  }
+
+  /* ── Grid: 4 columns ──
+     Col 1 : Robot Fleet
+     Col 2 : Command Console (widest)
+     Col 3 : Policy Decision / Telemetry (stacked)
+     Col 4 : Governance Event Feed
+
+     Rows are ALL auto — each row sizes to its tallest item.
+     Fleet (col1) and Console (col2) span rows 2-3, getting the
+     combined height of Policy (row2) + Telemetry (row3).
+  ─────────────────────────────────────────────────────────────────── */
   .dashboard-grid {
-    width: 100%;
-    max-width: none !important;
-    margin: 0 !important;
-    grid-template-columns: minmax(230px, 0.92fr) minmax(560px, 1.65fr) minmax(285px, 1fr) minmax(285px, 0.95fr) !important;
+    display: grid !important;
+    grid-template-columns:
+      minmax(200px, 0.85fr)
+      minmax(0, 1.6fr)
+      minmax(240px, 0.9fr)
+      minmax(240px, 0.85fr) !important;
     grid-template-rows: auto auto auto auto auto !important;
     height: auto !important;
-    min-height: 0 !important;
-    align-items: start;
+    min-height: unset !important;
+    max-height: none !important;
+    gap: 0.65rem;
+    align-items: stretch;
+    overflow: visible !important;
+    flex: none !important;           /* override mobile flex-direction:column */
   }
+
+  /* Pulse bar spans all 4 cols, row 1 */
   .dashboard-pulse {
     grid-column: 1 / 5 !important;
-    grid-template-columns: minmax(230px, 0.92fr) minmax(280px, 0.82fr) minmax(280px, 0.82fr) minmax(285px, 1fr) minmax(285px, 0.95fr);
+    grid-row: 1;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.5rem;
   }
-  .panel-queue,
-  .panel-log,
-  .panel-telemetry,
-  .panel-policy,
+
+  /* ── Panel placements ── */
+  /* Fleet and Console span rows 2-3 (the Policy + Telemetry combined height) */
+  .panel-fleet      { grid-column: 1;     grid-row: 2 / 4; }
+  .panel-console    { grid-column: 2;     grid-row: 2 / 4; }
+  .panel-policy     { grid-column: 3;     grid-row: 2; }
+  .panel-telemetry  { grid-column: 3;     grid-row: 3; }
+  /* Queue is a full-width strip below the upper region */
+  .panel-queue      { grid-column: 1 / 4; grid-row: 4; }
+  /* Audit Log spans full width */
+  .panel-log        { grid-column: 1 / 4; grid-row: 5; }
+  /* Event Feed spans all upper rows in its column */
+  .panel-event-feed { grid-column: 4;     grid-row: 2 / 6; }
+
+  /* ── Reset stray constraints from earlier rules ── */
   .panel-fleet,
   .panel-console,
+  .panel-policy,
+  .panel-telemetry,
+  .panel-queue,
+  .panel-log,
   .panel-event-feed {
-    min-height: 0;
-    max-height: none;
+    min-height: 0 !important;
+    max-height: none !important;
   }
-  .queue-list { max-height: 135px; overflow-y: auto; padding: 0.25rem 0.6rem 0.45rem; }
-  .queue-header { border-bottom: 1px solid var(--border); }
-  .log-table-wrap { max-height: 190px; }
-  .chart-wrap { height: 92px; }
+
+  /* ── Fleet: flex column, robot list scrolls ── */
+  .panel-fleet {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    align-self: stretch;
+  }
+  #panelFleet .robot-list {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  #panelFleet .fleet-footer { flex-shrink: 0; }
+
+  /* ── Console: flex column, content scrolls, header sticky ── */
+  .panel-console {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    align-self: stretch;
+  }
+  #panelConsole {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  #panelConsole .panel-header {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--surface); flex-shrink: 0;
+  }
+
+  /* ── Policy: natural height, no clipping ── */
+  .panel-policy { overflow: hidden; height: auto; align-self: start; }
+  #policyDecisionContent { overflow: visible; }
+
+  /* ── Telemetry: natural height, fully visible, no scrollbar ── */
+  .panel-telemetry { overflow: hidden; height: auto; align-self: start; }
+  #panelTelemetry { display: flex; flex-direction: column; }
+  #panelTelemetry #telemetryContent {
+    overflow: visible;
+    flex-shrink: 0;
+  }
+  /* Charts always expanded; toggle hidden */
+  .tele-charts.collapsed { display: flex !important; }
+  .charts-toggle-btn     { display: none !important; }
+  .chart-wrap            { height: 80px; }
+
+  /* ── Queue: compact strip, only header + pipeline visible ── */
+  .panel-queue { overflow: hidden; height: auto; align-self: start; }
+  #panelQueue .queue-list        { max-height: 0; overflow: hidden; padding: 0; }
+  #panelQueue .queue-header      { border-bottom: none; }
+  .queue-pipeline                { flex: 1; justify-content: center; overflow: visible; }
+  .pipeline-step                 { padding: 0.4rem 0.75rem; flex-shrink: 1; }
+  .pipeline-step i               { font-size: 13px; }
+  .pipeline-step span            { font-size: 9px; }
+  .pipeline-arrow                { font-size: 10px; padding: 0 0.2rem; }
+
+  /* ── Audit Log: min-height set, table scrolls internally ── */
+  .panel-log {
+    overflow: hidden;
+    height: auto;
+    min-height: 200px !important;
+  }
+  #panelLog .log-table-wrap,
+  #panelLog .log-card-list {
+    min-height: 150px;
+    max-height: 300px !important;
+    overflow-y: auto;
+  }
+  .log-resize-handle { display: block; }
+
+  /* ── Event Feed: stretches to match rows 2-5, scrolls internally ── */
+  .panel-event-feed {
+    overflow: hidden;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel-event-feed .event-feed-list {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
 }
 
+/* ── 3. Wide desktop (≥1440px): wider columns ── */
 @media (min-width: 1440px) {
+  #mainContent { padding: 0.75rem 1.1rem; }
+
   .dashboard-grid {
-    grid-template-columns: minmax(250px, 0.95fr) minmax(660px, 1.85fr) minmax(315px, 1fr) minmax(315px, 0.95fr) !important;
+    grid-template-columns: minmax(220px, 0.88fr) minmax(0, 1.7fr) minmax(260px, 0.92fr) minmax(260px, 0.88fr) !important;
+    max-width: none !important;
+    margin: 0 !important;
+    gap: 0.75rem;
   }
-  .dashboard-pulse {
-    grid-template-columns: minmax(250px, 0.95fr) minmax(320px, 0.9fr) minmax(320px, 0.9fr) minmax(315px, 1fr) minmax(315px, 0.95fr);
+  .panel-log { min-height: 0 !important; }
+  #panelLog .log-table-wrap,
+  #panelLog .log-card-list { max-height: none !important; }
+  .chart-wrap { height: 90px; }
+}
+
+/* ── 4. Very wide (≥1680px): generous columns ── */
+@media (min-width: 1680px) {
+  #mainContent { padding: 0.85rem 1.25rem; }
+
+  .dashboard-grid {
+    grid-template-columns: minmax(240px, 0.9fr) minmax(0, 1.75fr) minmax(280px, 0.95fr) minmax(280px, 0.9fr) !important;
+    gap: 0.85rem;
   }
-  .queue-list { max-height: 150px; }
-  .log-table-wrap { max-height: 220px; }
   .chart-wrap { height: 100px; }
 }
 
-
-/* ═══════════════════════════════════
-   DASHBOARD STABILITY + FEED CARD ALIGNMENT HOTFIX
-═══════════════════════════════════ */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .dashboard-grid {
-    grid-template-rows: auto minmax(160px, 0.42fr) minmax(220px, 0.5fr) minmax(72px, 0.18fr) minmax(220px, 0.5fr) !important;
-    height: calc(100vh - var(--nav-h) - var(--strip-h) - 2rem) !important;
-    min-height: 700px !important;
-    max-height: calc(100vh - var(--nav-h) - var(--strip-h) - 2rem) !important;
-    align-items: stretch;
-    overflow: hidden;
-  }
-
-  .panel-fleet,
-  .panel-console,
-  .panel-policy,
-  .panel-telemetry,
-  .panel-queue,
-  .panel-log,
-  .panel-event-feed {
-    min-height: 0;
-  }
-
-  .panel-fleet,
-  .panel-console,
-  .panel-policy,
-  .panel-telemetry,
-  .panel-queue,
-  .panel-log {
-    height: 100%;
-    max-height: 100%;
-  }
-
-  .panel-fleet .robot-list,
-  #panelQueue .queue-list,
-  #panelLog .log-table-wrap,
-  #panelLog .log-card-list {
-    min-height: 0;
-    overflow-y: auto;
-  }
-
-  #panelTelemetry #telemetryContent {
-    overflow-y: visible;
-    min-height: max-content;
-  }
-
-  #panelLog .log-table-wrap,
-  #panelLog .log-card-list {
-    min-height: clamp(220px, 30vh, 320px);
-    max-height: none !important;
-    overflow-y: auto;
-  }
-
-  #panelLog {
-    overflow: hidden !important;
-    display: flex;
-    flex-direction: column;
-  }
-  #panelLog .log-table-wrap,
-  #panelLog .log-card-list {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  #panelConsole {
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  #panelConsole .panel-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: var(--surface);
-  }
-
-  .panel-event-feed {
-    align-self: stretch;
-    height: 100%;
-    max-height: 100%;
-    min-height: 0;
-    overflow: hidden;
-  }
-  .panel-event-feed .event-feed-list {
-    flex: 1 1 auto;
-    min-height: 0;
-    max-height: none !important;
-    overflow-y: auto;
-  }
-}
-
-@media (min-width: 1024px) {
-  .dashboard-grid {
-    grid-template-rows: auto minmax(170px, 0.42fr) minmax(260px, 0.58fr) minmax(78px, 0.18fr) minmax(250px, 0.5fr) !important;
-    height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.15rem) !important;
-    min-height: 760px !important;
-    max-height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.15rem) !important;
-    align-items: stretch;
-    overflow: hidden;
-  }
-
-  .panel-fleet,
-  .panel-console,
-  .panel-policy,
-  .panel-telemetry,
-  .panel-queue,
-  .panel-log,
-  .panel-event-feed {
-    min-height: 0;
-  }
-
-  .panel-fleet,
-  .panel-console,
-  .panel-policy,
-  .panel-telemetry,
-  .panel-queue,
-  .panel-log {
-    height: 100%;
-    max-height: 100%;
-  }
-
-  .panel-telemetry {
-    min-height: 340px;
-  }
-
-  .panel-fleet .robot-list,
-  #panelQueue .queue-list,
-  #panelLog .log-table-wrap,
-  #panelLog .log-card-list {
-    min-height: 0;
-    overflow-y: auto;
-  }
-
-  #panelTelemetry #telemetryContent {
-    overflow-y: visible;
-    min-height: max-content;
-  }
-
-  #panelLog .log-table-wrap,
-  #panelLog .log-card-list {
-    min-height: clamp(260px, 34vh, 380px);
-    max-height: none !important;
-    overflow-y: auto;
-  }
-
-  #panelLog {
-    overflow: hidden !important;
-    display: flex;
-    flex-direction: column;
-  }
-  #panelLog .log-table-wrap,
-  #panelLog .log-card-list {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  #panelConsole {
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  #panelConsole .panel-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: var(--surface);
-  }
-
-  .panel-event-feed {
-    align-self: stretch;
-    height: 100%;
-    max-height: 100%;
-    min-height: 0;
-    overflow: hidden;
-  }
-  .panel-event-feed .event-feed-list {
-    flex: 1 1 auto;
-    min-height: 0;
-    max-height: none !important;
-    overflow-y: auto;
-  }
-}
-
+/* ── Event Feed item layout (all breakpoints) ── */
 #panelEventFeed .event-feed-item {
-  padding: 0.66rem 0.72rem;
+  padding: 0.6rem 0.7rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
-}
-#panelEventFeed .event-feed-meta,
-#panelEventFeed .event-feed-title,
-#panelEventFeed .event-feed-desc {
-  width: min(100%, 560px);
-  margin-left: auto;
-  margin-right: auto;
 }
 #panelEventFeed .event-feed-meta {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.48rem;
-  margin-bottom: 0.24rem;
+  gap: 0.4rem;
+  margin-bottom: 0.2rem;
 }
-#panelEventFeed .event-feed-time {
-  line-height: 1.16;
-  letter-spacing: 0.01em;
-}
-#panelEventFeed .event-feed-severity {
-  width: 1.15rem;
-  min-width: 1.15rem;
-  justify-content: center;
-  align-items: center;
-  line-height: 1;
-}
-#panelEventFeed .event-feed-category {
-  line-height: 1.16;
-  letter-spacing: 0.048em;
-}
-#panelEventFeed .event-feed-title {
-  margin-top: 0.02rem;
-  line-height: 1.3;
-  text-align: center;
-}
-#panelEventFeed .event-feed-desc {
-  margin-top: 0.3rem;
-  line-height: 1.34;
-  text-align: center;
-}
+#panelEventFeed .event-feed-time   { line-height: 1.15; letter-spacing: 0.01em; }
+#panelEventFeed .event-feed-title  { line-height: 1.3; }
+#panelEventFeed .event-feed-desc   { margin-top: 0.25rem; line-height: 1.3; }
 
 .events-drawer .event-feed-list {
   min-height: 0;
