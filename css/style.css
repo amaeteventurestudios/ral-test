@@ -3881,7 +3881,7 @@ button:focus-visible, a:focus-visible {
     max-width: none !important;
     margin: 0 !important;
     grid-template-columns: minmax(230px, 0.9fr) minmax(560px, 1.55fr) minmax(290px, 0.98fr) minmax(300px, 0.95fr) !important;
-    grid-template-rows: auto minmax(170px, 0.42fr) minmax(245px, 0.58fr) minmax(70px, 0.15fr) minmax(250px, 0.35fr) !important;
+    grid-template-rows: auto minmax(160px, 0.42fr) minmax(255px, 0.58fr) minmax(64px, 0.15fr) minmax(220px, 0.35fr) !important;
     height: calc(100dvh - var(--nav-h) - var(--strip-h) - 1.65rem) !important;
     min-height: 760px !important;
     max-height: calc(100dvh - var(--nav-h) - var(--strip-h) - 1.65rem) !important;
