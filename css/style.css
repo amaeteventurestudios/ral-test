@@ -3559,7 +3559,7 @@ button:focus-visible, a:focus-visible {
 ═══════════════════════════════════ */
 @media (min-width: 768px) and (max-width: 1023px) {
   .dashboard-grid {
-    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 0.34fr) minmax(360px, 1.05fr) !important;
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1.18fr) minmax(0, 0.32fr) minmax(280px, 0.9fr) !important;
     height: auto !important;
     min-height: calc(100vh - var(--nav-h) - var(--strip-h) - 2rem) !important;
     align-items: stretch;
@@ -3600,13 +3600,13 @@ button:focus-visible, a:focus-visible {
 
   #panelLog .log-table-wrap,
   #panelLog .log-card-list {
-    min-height: clamp(300px, 34vh, 420px);
+    min-height: clamp(240px, 28vh, 320px);
     max-height: none !important;
     overflow-y: auto;
   }
 
   #panelLog {
-    overflow: hidden;
+    overflow: hidden !important;
     display: flex;
     flex-direction: column;
   }
@@ -3643,7 +3643,7 @@ button:focus-visible, a:focus-visible {
 
 @media (min-width: 1024px) {
   .dashboard-grid {
-    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 0.34fr) minmax(420px, 1.05fr) !important;
+    grid-template-rows: auto minmax(0, 0.95fr) minmax(0, 1.4fr) minmax(0, 0.22fr) minmax(280px, 0.78fr) !important;
     height: auto !important;
     min-height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.15rem) !important;
     align-items: stretch;
@@ -3684,13 +3684,13 @@ button:focus-visible, a:focus-visible {
 
   #panelLog .log-table-wrap,
   #panelLog .log-card-list {
-    min-height: clamp(340px, 38vh, 520px);
+    min-height: clamp(280px, 32vh, 360px);
     max-height: none !important;
     overflow-y: auto;
   }
 
   #panelLog {
-    overflow: hidden;
+    overflow: hidden !important;
     display: flex;
     flex-direction: column;
   }
