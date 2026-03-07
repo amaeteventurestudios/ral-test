@@ -3646,7 +3646,7 @@ button:focus-visible, a:focus-visible {
 
 @media (min-width: 1024px) {
   .dashboard-grid {
-    grid-template-rows: auto minmax(170px, 0.44fr) minmax(240px, 0.56fr) minmax(78px, 0.18fr) minmax(250px, 0.5fr) !important;
+    grid-template-rows: auto minmax(170px, 0.42fr) minmax(260px, 0.58fr) minmax(78px, 0.18fr) minmax(250px, 0.5fr) !important;
     height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.15rem) !important;
     min-height: 760px !important;
     max-height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.15rem) !important;
