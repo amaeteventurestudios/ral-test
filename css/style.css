@@ -3475,3 +3475,80 @@ button:focus-visible, a:focus-visible {
     grid-template-columns: 260px minmax(0, 0.5fr) minmax(0, 0.5fr) 320px minmax(320px, 340px);
   }
 }
+
+
+/* ═══════════════════════════════════
+   DASHBOARD FULL-WIDTH LAYOUT REFINEMENT
+   (non-breaking overrides)
+═══════════════════════════════════ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dashboard-grid {
+    width: 100%;
+    max-width: none !important;
+    margin: 0 !important;
+    grid-template-columns: minmax(220px, 0.95fr) minmax(420px, 1.55fr) minmax(250px, 1.05fr) !important;
+    grid-template-rows: auto auto auto auto auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    align-items: start;
+  }
+  .dashboard-pulse {
+    grid-column: 1 / 4 !important;
+    grid-template-columns: minmax(220px, 0.95fr) minmax(210px, 0.75fr) minmax(210px, 0.75fr) minmax(250px, 1.05fr) minmax(250px, 1.05fr);
+  }
+  .panel-queue,
+  .panel-log,
+  .panel-telemetry,
+  .panel-policy,
+  .panel-fleet,
+  .panel-console,
+  .panel-event-feed {
+    min-height: 0;
+    max-height: none;
+  }
+  .queue-list { max-height: 120px; overflow-y: auto; padding: 0.25rem 0.6rem 0.45rem; }
+  .chart-wrap { height: 84px; }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    width: 100%;
+    max-width: none !important;
+    margin: 0 !important;
+    grid-template-columns: minmax(230px, 0.92fr) minmax(560px, 1.65fr) minmax(285px, 1fr) minmax(285px, 0.95fr) !important;
+    grid-template-rows: auto auto auto auto auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    align-items: start;
+  }
+  .dashboard-pulse {
+    grid-column: 1 / 5 !important;
+    grid-template-columns: minmax(230px, 0.92fr) minmax(280px, 0.82fr) minmax(280px, 0.82fr) minmax(285px, 1fr) minmax(285px, 0.95fr);
+  }
+  .panel-queue,
+  .panel-log,
+  .panel-telemetry,
+  .panel-policy,
+  .panel-fleet,
+  .panel-console,
+  .panel-event-feed {
+    min-height: 0;
+    max-height: none;
+  }
+  .queue-list { max-height: 135px; overflow-y: auto; padding: 0.25rem 0.6rem 0.45rem; }
+  .queue-header { border-bottom: 1px solid var(--border); }
+  .log-table-wrap { max-height: 190px; }
+  .chart-wrap { height: 92px; }
+}
+
+@media (min-width: 1440px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(250px, 0.95fr) minmax(660px, 1.85fr) minmax(315px, 1fr) minmax(315px, 0.95fr) !important;
+  }
+  .dashboard-pulse {
+    grid-template-columns: minmax(250px, 0.95fr) minmax(320px, 0.9fr) minmax(320px, 0.9fr) minmax(315px, 1fr) minmax(315px, 0.95fr);
+  }
+  .queue-list { max-height: 150px; }
+  .log-table-wrap { max-height: 220px; }
+  .chart-wrap { height: 100px; }
+}
