@@ -3572,10 +3572,13 @@ button:focus-visible, a:focus-visible {
   }
 
   .panel-event-feed {
-    max-height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.05rem);
+    align-self: stretch;
+    height: 100%;
+    max-height: none;
     overflow: hidden;
   }
   .panel-event-feed .event-feed-list {
+    flex: 1 1 auto;
     min-height: 0;
     max-height: none !important;
     overflow-y: auto;
@@ -3597,18 +3600,16 @@ button:focus-visible, a:focus-visible {
   }
 
   .panel-event-feed {
-    max-height: calc(100vh - var(--nav-h) - var(--strip-h) - 2.2rem);
+    align-self: stretch;
+    height: 100%;
+    max-height: none;
     overflow: hidden;
   }
   .panel-event-feed .event-feed-list {
+    flex: 1 1 auto;
     min-height: 0;
     max-height: none !important;
     overflow-y: auto;
-  }
-
-  .panel-queue,
-  .panel-log {
-    align-self: start;
   }
 }
 
