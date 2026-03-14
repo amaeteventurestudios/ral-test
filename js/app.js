@@ -299,6 +299,11 @@ function initApp() {
   bindContrastPage();
   bindGovernanceEventFeed();
 
+  // Addition 1-3 initializers
+  initCameraFeed();
+  initControlModeToggle();
+  initCommandSequencer();
+
   // Clear queue button
   document.getElementById('clearQueueBtn')?.addEventListener('click', () => {
     STATE.commandQueue = STATE.commandQueue.filter(q => q.status === 'Executing');
@@ -3681,3 +3686,361 @@ function closeEventsDrawer() {
   document.getElementById('eventsDrawerOverlay')?.classList.remove('open');
   document.getElementById('eventsDrawer')?.classList.remove('open');
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ADDITION 1: CAMERA FEED
+═══════════════════════════════════════════════════════════════ */
+
+// Camera stream URLs — set these to real stream endpoints when available
+const CAMERA_STREAM_URLS = {
+  'R-01': '',
+  'R-02': '',
+  'R-03': '',
+};
+
+function initCameraFeed() {
+  const camBtns = document.querySelectorAll('.camera-robot-btn[data-robot-cam]');
+  camBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Deactivate all
+      camBtns.forEach(b => b.classList.remove('active'));
+      // Activate clicked
+      btn.classList.add('active');
+
+      const robotId = btn.dataset.robotCam;
+      // Update feed src
+      const feedImg = document.getElementById('camera-feed');
+      if (feedImg) {
+        feedImg.src = CAMERA_STREAM_URLS[robotId] || '';
+      }
+      // Update label
+      const labelEl = document.getElementById('cameraLabelTL');
+      if (labelEl) {
+        labelEl.textContent = `${robotId} · CAM-1 · 640x480`;
+      }
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ADDITION 2: CONTROL MODE TOGGLE (Button / Keyboard / Joystick)
+═══════════════════════════════════════════════════════════════ */
+
+let controlMode = 'button';        // 'button' | 'keyboard' | 'joystick'
+let keyboardListenerActive = false;
+let joystickRafId = null;
+let joystickPollInterval = null;
+
+function initControlModeToggle() {
+  const modeBtns = document.querySelectorAll('.control-mode-btn[data-mode]');
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      setControlMode(mode);
+    });
+  });
+}
+
+function setControlMode(mode) {
+  controlMode = mode;
+
+  // Visual: toggle active button
+  document.querySelectorAll('.control-mode-btn[data-mode]').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+
+  const hint = document.getElementById('keyboardHint');
+
+  // Keyboard hint visibility
+  if (hint) {
+    hint.classList.toggle('hidden', mode !== 'keyboard');
+  }
+
+  // Keyboard listeners
+  if (mode === 'keyboard') {
+    enableKeyboardControls();
+  } else {
+    disableKeyboardControls();
+  }
+
+  // Joystick polling
+  if (mode === 'joystick') {
+    enableJoystickControls();
+  } else {
+    disableJoystickControls();
+  }
+}
+
+/* ── Keyboard Controls ── */
+function handleKeyDown(e) {
+  if (controlMode !== 'keyboard') return;
+  // Ignore if focus is on an input/textarea
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+
+  let cmd = null;
+  switch (e.code) {
+    case 'KeyW': case 'ArrowUp':    cmd = 'MOVE_FORWARD'; break;
+    case 'KeyS': case 'ArrowDown':  cmd = 'MOVE_BACK'; break;
+    case 'KeyA': case 'ArrowLeft':  cmd = 'TURN_LEFT'; break;
+    case 'KeyD': case 'ArrowRight': cmd = 'TURN_RIGHT'; break;
+    case 'Space':                    cmd = 'STOP'; break;
+  }
+
+  if (cmd) {
+    e.preventDefault();
+    dispatchConsoleCommand(cmd);
+  }
+}
+
+function enableKeyboardControls() {
+  if (keyboardListenerActive) return;
+  document.addEventListener('keydown', handleKeyDown);
+  keyboardListenerActive = true;
+}
+
+function disableKeyboardControls() {
+  document.removeEventListener('keydown', handleKeyDown);
+  keyboardListenerActive = false;
+}
+
+/* ── Joystick / Gamepad Controls ── */
+let joystickLastCmd = null;
+let joystickThrottleMs = 100;
+let joystickLastFired = 0;
+
+function enableJoystickControls() {
+  function pollGamepad() {
+    if (controlMode !== 'joystick') return;
+
+    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+    let gp = null;
+    for (let i = 0; i < gamepads.length; i++) {
+      if (gamepads[i]) { gp = gamepads[i]; break; }
+    }
+
+    if (gp) {
+      const axisX = gp.axes[0] || 0; // left stick X
+      const axisY = gp.axes[1] || 0; // left stick Y
+      const threshold = 0.4;
+      const now = Date.now();
+
+      let cmd = null;
+      if (axisY < -threshold)      cmd = 'MOVE_FORWARD';
+      else if (axisY > threshold)  cmd = 'MOVE_BACK';
+      else if (axisX < -threshold) cmd = 'TURN_LEFT';
+      else if (axisX > threshold)  cmd = 'TURN_RIGHT';
+
+      if (cmd && (now - joystickLastFired > joystickThrottleMs)) {
+        dispatchConsoleCommand(cmd);
+        joystickLastFired = now;
+      }
+    }
+
+    joystickRafId = requestAnimationFrame(pollGamepad);
+  }
+
+  joystickRafId = requestAnimationFrame(pollGamepad);
+
+  window.addEventListener('gamepadconnected', onGamepadConnected);
+  window.addEventListener('gamepaddisconnected', onGamepadDisconnected);
+}
+
+function disableJoystickControls() {
+  if (joystickRafId) { cancelAnimationFrame(joystickRafId); joystickRafId = null; }
+  window.removeEventListener('gamepadconnected', onGamepadConnected);
+  window.removeEventListener('gamepaddisconnected', onGamepadDisconnected);
+}
+
+function onGamepadConnected(e) {
+  showToast(`Gamepad connected: ${e.gamepad.id}`, 'info');
+}
+
+function onGamepadDisconnected(e) {
+  showToast('Gamepad disconnected', 'warning');
+}
+
+/**
+ * dispatchConsoleCommand — Routes a command through the exact same
+ * pipeline as the existing command buttons (selectDraftCommand + sendForValidation).
+ * Works for keyboard and joystick modes.
+ */
+function dispatchConsoleCommand(cmd) {
+  if (STATE.selectedRobots.size === 0) return;
+  selectDraftCommand(cmd);
+  sendForValidation();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ADDITION 3: COMMAND SEQUENCER
+═══════════════════════════════════════════════════════════════ */
+
+const MAX_SEQUENCE_CMDS = 10;
+let sequenceQueue = []; // Array of command strings
+let sequenceRunning = false;
+
+function initCommandSequencer() {
+  const palette = document.getElementById('seqPalette');
+  const dropzone = document.getElementById('seqDropzone');
+  const seqQueueEl = document.getElementById('seqQueue');
+  const placeholder = document.getElementById('seqDropzonePlaceholder');
+  const sendSeqBtn = document.getElementById('sendSequenceBtn');
+
+  if (!palette || !dropzone) return;
+
+  // ── Palette drag events ──
+  palette.querySelectorAll('.seq-chip[data-seq-cmd]').forEach(chip => {
+    chip.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', chip.dataset.seqCmd);
+      chip.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+    chip.addEventListener('dragend', () => {
+      chip.classList.remove('dragging');
+    });
+  });
+
+  // ── Drop zone events ──
+  dropzone.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    dropzone.classList.add('drag-over');
+  });
+
+  dropzone.addEventListener('dragleave', e => {
+    if (!dropzone.contains(e.relatedTarget)) {
+      dropzone.classList.remove('drag-over');
+    }
+  });
+
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    const cmd = e.dataTransfer.getData('text/plain');
+    if (!cmd) return;
+    if (sequenceQueue.length >= MAX_SEQUENCE_CMDS) {
+      showToast(`Sequence is full (max ${MAX_SEQUENCE_CMDS} commands)`, 'warning');
+      return;
+    }
+    addToSequence(cmd);
+  });
+
+  // ── Send Sequence button ──
+  if (sendSeqBtn) {
+    sendSeqBtn.addEventListener('click', runSequence);
+  }
+}
+
+function addToSequence(cmd) {
+  if (sequenceRunning) return;
+  sequenceQueue.push(cmd);
+  renderSequenceQueue();
+}
+
+function removeFromSequence(index) {
+  if (sequenceRunning) return;
+  sequenceQueue.splice(index, 1);
+  renderSequenceQueue();
+}
+
+function renderSequenceQueue() {
+  const seqQueueEl = document.getElementById('seqQueue');
+  const placeholder = document.getElementById('seqDropzonePlaceholder');
+  const sendSeqBtn = document.getElementById('sendSequenceBtn');
+
+  if (!seqQueueEl) return;
+
+  seqQueueEl.innerHTML = '';
+
+  if (sequenceQueue.length === 0) {
+    if (placeholder) placeholder.style.display = '';
+    if (sendSeqBtn) sendSeqBtn.disabled = true;
+    return;
+  }
+
+  if (placeholder) placeholder.style.display = 'none';
+  if (sendSeqBtn) sendSeqBtn.disabled = sequenceRunning;
+
+  sequenceQueue.forEach((cmd, idx) => {
+    const chip = document.createElement('div');
+    chip.className = 'seq-queued-chip';
+    chip.dataset.seqIdx = idx;
+    chip.innerHTML = `${cmd}<span class="seq-remove" title="Remove">×</span>`;
+    chip.querySelector('.seq-remove').addEventListener('click', () => removeFromSequence(idx));
+    seqQueueEl.appendChild(chip);
+  });
+}
+
+async function runSequence() {
+  if (sequenceRunning) return;
+  if (sequenceQueue.length === 0) return;
+  if (STATE.selectedRobots.size === 0) {
+    showToast('Select at least one robot before running a sequence', 'warning');
+    return;
+  }
+
+  sequenceRunning = true;
+  const sendSeqBtn = document.getElementById('sendSequenceBtn');
+  if (sendSeqBtn) {
+    sendSeqBtn.disabled = true;
+    sendSeqBtn.innerHTML = '<i class="fas fa-cog fa-spin"></i> Running Sequence…';
+  }
+
+  const chips = document.querySelectorAll('#seqQueue .seq-queued-chip');
+
+  for (let i = 0; i < sequenceQueue.length; i++) {
+    const cmd = sequenceQueue[i];
+    const chip = chips[i];
+
+    // Mark running
+    if (chip) { chip.classList.remove('seq-done', 'seq-blocked'); chip.classList.add('seq-running'); }
+
+    // Dispatch through existing pipeline
+    selectDraftCommand(cmd);
+
+    // Wait for the validation/execution cycle to complete
+    // We watch the audit log for a new entry with this command
+    const beforeCount = STATE.auditLog.length;
+    await sendForValidationAsync(cmd);
+
+    // Mark done or blocked based on audit result
+    const afterEntry = STATE.auditLog.find((e, idx) => idx >= beforeCount && e.command === cmd);
+    const blocked = afterEntry && afterEntry.validation === 'BLOCKED';
+
+    if (chip) {
+      chip.classList.remove('seq-running');
+      chip.classList.add(blocked ? 'seq-blocked' : 'seq-done');
+    }
+
+    // Pause briefly between commands
+    await delay(600);
+  }
+
+  // All done — clear the drop zone
+  sequenceQueue = [];
+  sequenceRunning = false;
+  renderSequenceQueue();
+
+  if (sendSeqBtn) {
+    sendSeqBtn.innerHTML = '<i class="fas fa-play-circle"></i> Send Sequence for Validation';
+    sendSeqBtn.disabled = true;
+  }
+
+  showToast('Sequence completed', 'approved');
+}
+
+/**
+ * sendForValidationAsync — wraps the existing sendForValidation()
+ * in a Promise that resolves when the validation + queue cycle
+ * finishes (approximated with a delay that mirrors the pipeline steps).
+ */
+async function sendForValidationAsync(cmd) {
+  // The existing sendForValidation already uses async/await internally.
+  // We call it and wait for a duration that covers its full pipeline time.
+  await sendForValidation();
+  // Allow the queue processor time to pick up and execute the item
+  await delay(1800);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HOOK ALL THREE ADDITIONS INTO initApp — inlined above
+═══════════════════════════════════════════════════════════════ */

@@ -3726,3 +3726,370 @@ button:focus-visible, a:focus-visible {
   min-height: 0;
   overflow-y: auto;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   CAMERA FEED — Addition 1
+═══════════════════════════════════════════════════════════════ */
+
+/* Scanline sweep animation */
+@keyframes scanlineSweep {
+  0%   { top: 0%; }
+  100% { top: 100%; }
+}
+
+/* Live blink animation */
+@keyframes liveBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.camera-feed-section {
+  padding: 0.65rem 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.camera-feed-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #050507;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-2);
+  overflow: hidden;
+}
+
+/* Persistent grid overlay */
+.camera-grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Scanline sweep div */
+.camera-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(233, 103, 35, 0.55) 40%,
+    rgba(233, 103, 35, 0.85) 50%,
+    rgba(233, 103, 35, 0.55) 60%,
+    transparent 100%
+  );
+  animation: scanlineSweep 2.5s linear infinite;
+}
+
+/* The video/image itself */
+.camera-feed-box img#camera-feed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  display: block;
+}
+
+/* Top-left label */
+.camera-label-tl {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.5rem;
+  z-index: 4;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 6px rgba(0,0,0,0.8);
+  pointer-events: none;
+}
+
+/* Top-right LIVE indicator */
+.camera-label-tr {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.5rem;
+  z-index: 4;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--danger);
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.camera-live-dot {
+  font-size: 10px;
+  animation: liveBlink 1s step-start infinite;
+}
+
+/* Robot camera selector buttons */
+.camera-robot-btns {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.camera-robot-btn {
+  flex: 1;
+  padding: 0.3rem 0.5rem;
+  min-height: 30px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--mono);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.04em;
+}
+
+.camera-robot-btn:hover {
+  background: var(--surface-3);
+  border-color: var(--border-2);
+  color: var(--text);
+}
+
+.camera-robot-btn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONTROL MODE TOGGLE — Addition 2
+═══════════════════════════════════════════════════════════════ */
+
+.control-mode-row {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem 0.4rem;
+}
+
+.control-mode-btn {
+  flex: 1;
+  padding: 0.4rem 0.5rem;
+  min-height: 34px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.control-mode-btn i { font-size: 11px; }
+
+.control-mode-btn:hover {
+  background: var(--surface-3);
+  border-color: var(--border-2);
+  color: var(--text);
+}
+
+.control-mode-btn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Keyboard hint bar */
+.keyboard-hint {
+  margin: 0 0.75rem 0.35rem;
+  padding: 0.3rem 0.6rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  letter-spacing: 0.03em;
+  font-family: var(--mono);
+}
+
+.keyboard-hint i { color: var(--accent); font-size: 10px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   COMMAND SEQUENCER — Addition 3
+═══════════════════════════════════════════════════════════════ */
+
+.cmd-sequencer {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sequencer-header {
+  display: flex;
+  align-items: center;
+}
+
+.sequencer-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sequencer-title i { color: var(--accent); }
+
+/* Part A: Command palette */
+.seq-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.seq-chip {
+  font-size: 9.5px;
+  font-weight: 700;
+  font-family: var(--mono);
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid rgba(233, 103, 35, 0.45);
+  color: var(--accent);
+  cursor: grab;
+  transition: all var(--transition);
+  user-select: none;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.seq-chip:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.seq-chip:active { cursor: grabbing; transform: scale(0.97); }
+.seq-chip.dragging { opacity: 0.45; transform: scale(0.97); }
+
+/* Part B: Drop zone */
+.seq-dropzone {
+  min-height: 44px;
+  background: var(--surface-2);
+  border: 1px dashed rgba(233, 103, 35, 0.45);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.5rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.seq-dropzone.drag-over {
+  border-color: var(--accent);
+  background: rgba(233, 103, 35, 0.07);
+}
+
+.seq-dropzone-placeholder {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  width: 100%;
+  pointer-events: none;
+  padding: 0.2rem 0;
+  font-style: italic;
+  align-self: center;
+}
+
+/* Queue of chips in drop zone */
+.seq-queue {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.seq-queued-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  font-family: var(--mono);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--accent-dim);
+  border: 1px solid rgba(233, 103, 35, 0.45);
+  color: var(--accent);
+  letter-spacing: 0.03em;
+}
+
+.seq-queued-chip .seq-remove {
+  cursor: pointer;
+  font-size: 10px;
+  opacity: 0.7;
+  font-style: normal;
+  line-height: 1;
+  margin-left: 1px;
+  color: var(--accent);
+  transition: opacity var(--transition);
+}
+
+.seq-queued-chip .seq-remove:hover { opacity: 1; }
+
+/* Send sequence button */
+.btn-send-seq {
+  width: 100%;
+  justify-content: center;
+  padding: 0.55rem;
+  font-size: 13px;
+  min-height: 40px;
+}
+
+.btn-send-seq:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Sequencer: running state indicator */
+.seq-queued-chip.seq-running {
+  border-color: var(--success);
+  background: var(--success-dim);
+  color: var(--success);
+  animation: queuePulse 1s ease infinite;
+}
+
+.seq-queued-chip.seq-done {
+  border-color: rgba(60,203,127,0.3);
+  background: rgba(60,203,127,0.08);
+  color: rgba(60,203,127,0.6);
+}
+
+.seq-queued-chip.seq-blocked {
+  border-color: rgba(209,75,75,0.45);
+  background: rgba(209,75,75,0.1);
+  color: var(--danger);
+}

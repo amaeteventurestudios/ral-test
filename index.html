@@ -330,6 +330,42 @@
             </div>
           </div>
 
+          <!-- ── Camera Feed ── -->
+          <div class="camera-feed-section">
+            <div class="camera-feed-box" id="cameraFeedBox">
+              <!-- Grid overlay (always visible) -->
+              <div class="camera-grid-overlay"></div>
+              <!-- Scanline sweep -->
+              <div class="camera-scanline" id="cameraScanline"></div>
+              <!-- Video image -->
+              <img id="camera-feed" src="" alt="Camera Feed" />
+              <!-- Labels -->
+              <span class="camera-label-tl" id="cameraLabelTL">R-01 · CAM-1 · 640x480</span>
+              <span class="camera-label-tr">
+                <span class="camera-live-dot">●</span> LIVE
+              </span>
+            </div>
+            <!-- Robot selector buttons -->
+            <div class="camera-robot-btns">
+              <button class="camera-robot-btn active" data-robot-cam="R-01">R-01</button>
+              <button class="camera-robot-btn" data-robot-cam="R-02">R-02</button>
+              <button class="camera-robot-btn" data-robot-cam="R-03">R-03</button>
+            </div>
+          </div>
+
+          <!-- ── Control Mode Toggle ── -->
+          <div class="control-mode-row">
+            <button class="control-mode-btn active" id="ctrlModeButton" data-mode="button">
+              <i class="fas fa-hand-pointer"></i> Button
+            </button>
+            <button class="control-mode-btn" id="ctrlModeKeyboard" data-mode="keyboard">
+              <i class="fas fa-keyboard"></i> Keyboard
+            </button>
+            <button class="control-mode-btn" id="ctrlModeJoystick" data-mode="joystick">
+              <i class="fas fa-gamepad"></i> Joystick
+            </button>
+          </div>
+
           <!-- Command Buttons -->
           <div class="command-grid">
             <button class="cmd-btn cmd-move" data-cmd="MOVE_FORWARD" title="Move Forward">
@@ -356,6 +392,11 @@
               <i class="fas fa-triangle-exclamation cmd-icon"></i>
               <span>E-Stop</span>
             </button>
+          </div>
+
+          <!-- Keyboard mode hint -->
+          <div class="keyboard-hint hidden" id="keyboardHint">
+            <i class="fas fa-keyboard"></i> WASD / Arrow keys active
           </div>
 
           <!-- Speed Control -->
@@ -392,6 +433,32 @@
                 <span class="toggle-slider"></span>
               </label>
             </div>
+          </div>
+
+          <!-- ── Command Sequencer ── -->
+          <div class="cmd-sequencer">
+            <div class="sequencer-header">
+              <span class="sequencer-title"><i class="fas fa-list-ol"></i> Command Sequencer</span>
+            </div>
+            <!-- Part A: Command Palette -->
+            <div class="seq-palette" id="seqPalette">
+              <div class="seq-chip" draggable="true" data-seq-cmd="MOVE_FORWARD">MOVE_FORWARD</div>
+              <div class="seq-chip" draggable="true" data-seq-cmd="MOVE_BACKWARD">MOVE_BACKWARD</div>
+              <div class="seq-chip" draggable="true" data-seq-cmd="TURN_LEFT">TURN_LEFT</div>
+              <div class="seq-chip" draggable="true" data-seq-cmd="TURN_RIGHT">TURN_RIGHT</div>
+              <div class="seq-chip" draggable="true" data-seq-cmd="STOP">STOP</div>
+              <div class="seq-chip" draggable="true" data-seq-cmd="START_AUTONOMY">START_AUTONOMY</div>
+              <div class="seq-chip" draggable="true" data-seq-cmd="PAUSE_AUTONOMY">PAUSE_AUTONOMY</div>
+            </div>
+            <!-- Part B: Drop Zone -->
+            <div class="seq-dropzone" id="seqDropzone">
+              <span class="seq-dropzone-placeholder" id="seqDropzonePlaceholder">Drop commands here to build a sequence</span>
+              <div class="seq-queue" id="seqQueue"></div>
+            </div>
+            <!-- Send Sequence Button -->
+            <button class="btn-primary btn-send-seq" id="sendSequenceBtn" disabled>
+              <i class="fas fa-play-circle"></i> Send Sequence for Validation
+            </button>
           </div>
 
           <!-- Command Draft -->
