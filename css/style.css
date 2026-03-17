@@ -3803,6 +3803,41 @@ button:focus-visible, a:focus-visible {
   z-index: 1;
   display: block;
 }
+/* Hide broken-image icon when src is empty */
+.camera-feed-box img#camera-feed:not([src]),
+.camera-feed-box img#camera-feed[src=""] {
+  display: none;
+}
+
+/* No-signal placeholder shown when img is hidden */
+.camera-no-signal {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  pointer-events: none;
+}
+.camera-no-signal i {
+  font-size: 22px;
+  color: var(--border-2);
+  opacity: 0.5;
+}
+.camera-no-signal span {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--border-2);
+  opacity: 0.5;
+}
+/* Hide placeholder when a real src is loaded */
+.camera-feed-box.has-stream .camera-no-signal {
+  display: none;
+}
 
 /* Top-left label */
 .camera-label-tl {

@@ -3691,33 +3691,45 @@ function closeEventsDrawer() {
    ADDITION 1: CAMERA FEED
 ═══════════════════════════════════════════════════════════════ */
 
-// Camera stream URLs — set these to real stream endpoints when available
+// Camera stream URLs — populated from STATE.robots; override here or set in Robot Config
 const CAMERA_STREAM_URLS = {
-  'R-01': '',
+  'R-01': '', // R-01's URL will be read from STATE.robots on init
   'R-02': '',
   'R-03': '',
 };
 
+function setCameraStream(robotId) {
+  const feedImg   = document.getElementById('camera-feed');
+  const feedBox   = document.getElementById('cameraFeedBox');
+  const labelEl   = document.getElementById('cameraLabelTL');
+  const noSignal  = document.getElementById('cameraNoSignal');
+  const url       = CAMERA_STREAM_URLS[robotId] || '';
+
+  if (feedImg) feedImg.src = url;
+  if (labelEl) labelEl.textContent = `${robotId} · CAM-1 · 640x480`;
+
+  // Toggle has-stream class so CSS can hide/show no-signal overlay
+  if (feedBox) feedBox.classList.toggle('has-stream', !!url);
+  if (noSignal) noSignal.style.display = url ? 'none' : '';
+}
+
 function initCameraFeed() {
+  // Seed CAMERA_STREAM_URLS from STATE.robots so configured streams are used
+  if (Array.isArray(STATE.robots)) {
+    STATE.robots.forEach(r => {
+      if (r.cameraUrl) CAMERA_STREAM_URLS[r.id] = r.cameraUrl;
+    });
+  }
+
+  // Set initial state (R-01 active)
+  setCameraStream('R-01');
+
   const camBtns = document.querySelectorAll('.camera-robot-btn[data-robot-cam]');
   camBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      // Deactivate all
       camBtns.forEach(b => b.classList.remove('active'));
-      // Activate clicked
       btn.classList.add('active');
-
-      const robotId = btn.dataset.robotCam;
-      // Update feed src
-      const feedImg = document.getElementById('camera-feed');
-      if (feedImg) {
-        feedImg.src = CAMERA_STREAM_URLS[robotId] || '';
-      }
-      // Update label
-      const labelEl = document.getElementById('cameraLabelTL');
-      if (labelEl) {
-        labelEl.textContent = `${robotId} · CAM-1 · 640x480`;
-      }
+      setCameraStream(btn.dataset.robotCam);
     });
   });
 }
